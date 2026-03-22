@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инженерный калькулятор — Прототип</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="calculator" id="calculator">
+        <!-- Header -->
+        <header class="calculator-header">
+            <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+                <span class="icon-sun">☀️</span>
+                <span class="icon-moon">🌙</span>
+            </button>
+            <h1 class="calculator-title">Engineering Calculator</h1>
+            <button class="history-toggle" id="historyToggle" aria-label="История">
+                📜
+            </button>
+        </header>
+
+        <!-- Display -->
+        <div class="display">
+            <div class="display-expression" id="expression">0</div>
+            <div class="display-result" id="result">0</div>
+            <div class="display-indicators">
+                <span class="indicator indicator-memory" id="memoryIndicator">M</span>
+                <span class="indicator indicator-mode" id="modeIndicator">DEG</span>
+            </div>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <div class="mode-toggle">
+                <button class="mode-btn active" data-mode="deg">DEG</button>
+                <button class="mode-btn" data-mode="rad">RAD</button>
+            </div>
+            <button class="second-btn" id="secondBtn">2nd</button>
+        </div>
+
+        <!-- Memory Buttons -->
+        <div class="memory-buttons">
+            <button class="btn btn-memory" data-action="mc">MC</button>
+            <button class="btn btn-memory" data-action="mr">MR</button>
+            <button class="btn btn-memory" data-action="m-plus">M+</button>
+            <button class="btn btn-memory" data-action="m-minus">M−</button>
+            <button class="btn btn-memory" data-action="ms">MS</button>
+        </div>
+
+        <!-- Scientific Functions -->
+        <div class="scientific-functions">
+            <!-- Row 1: Trig -->
+            <button class="btn btn-scientific" data-action="sin">sin</button>
+            <button class="btn btn-scientific" data-action="cos">cos</button>
+            <button class="btn btn-scientific" data-action="tan">tan</button>
+            <button class="btn btn-scientific" data-action="log">log</button>
+            <button class="btn btn-scientific" data-action="ln">ln</button>
+            <button class="btn btn-scientific" data-action="pi">π</button>
+
+            <!-- Row 2: Inverse Trig -->
+            <button class="btn btn-scientific" data-action="asin">asin</button>
+            <button class="btn btn-scientific" data-action="acos">acos</button>
+            <button class="btn btn-scientific" data-action="atan">atan</button>
+            <button class="btn btn-scientific" data-action="10x">10<sup>x</sup></button>
+            <button class="btn btn-scientific" data-action="ex">e<sup>x</sup></button>
+            <button class="btn btn-scientific" data-action="e">e</button>
+
+            <!-- Row 3: Powers -->
+            <button class="btn btn-scientific" data-action="x2">x<sup>2</sup></button>
+            <button class="btn btn-scientific" data-action="x3">x<sup>3</sup></button>
+            <button class="btn btn-scientific" data-action="xn">x<sup>n</sup></button>
+            <button class="btn btn-scientific" data-action="sqrt">√x</button>
+            <button class="btn btn-scientific" data-action="cbrt">∛x</button>
+            <button class="btn btn-scientific" data-action="nroot">ⁿ√x</button>
+
+            <!-- Row 4: Special -->
+            <button class="btn btn-scientific" data-action="abs">|x|</button>
+            <button class="btn btn-scientific" data-action="factorial">n!</button>
+            <button class="btn btn-scientific" data-action="inverse">1/x</button>
+            <button class="btn btn-scientific" data-action="exp">EXP</button>
+            <button class="btn btn-scientific" data-action="lparen">(</button>
+            <button class="btn btn-scientific" data-action="rparen">)</button>
+        </div>
+
+        <!-- Basic Keypad -->
+        <div class="basic-keypad">
+            <!-- Row 1 -->
+            <button class="btn btn-function" data-action="clear">AC</button>
+            <button class="btn btn-function" data-action="negate">+/−</button>
+            <button class="btn btn-function" data-action="percent">%</button>
+            <button class="btn btn-operator" data-action="divide">÷</button>
+
+            <!-- Row 2 -->
+            <button class="btn btn-digit" data-digit="7">7</button>
+            <button class="btn btn-digit" data-digit="8">8</button>
+            <button class="btn btn-digit" data-digit="9">9</button>
+            <button class="btn btn-operator" data-action="multiply">×</button>
+
+            <!-- Row 3 -->
+            <button class="btn btn-digit" data-digit="4">4</button>
+            <button class="btn btn-digit" data-digit="5">5</button>
+            <button class="btn btn-digit" data-digit="6">6</button>
+            <button class="btn btn-operator" data-action="subtract">−</button>
+
+            <!-- Row 4 -->
+            <button class="btn btn-digit" data-digit="1">1</button>
+            <button class="btn btn-digit" data-digit="2">2</button>
+            <button class="btn btn-digit" data-digit="3">3</button>
+            <button class="btn btn-operator" data-action="add">+</button>
+
+            <!-- Row 5 -->
+            <button class="btn btn-digit btn-zero" data-digit="0">0</button>
+            <button class="btn btn-digit" data-action="decimal">.</button>
+            <button class="btn btn-equals" data-action="equals">=</button>
+        </div>
+
+        <!-- History Panel (hidden by default) -->
+        <div class="history-panel" id="historyPanel">
+            <div class="history-header">
+                <h2>История</h2>
+                <button class="history-clear" id="historyClear">Очистить</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="history-empty">История пуста</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,544 @@
+/* ========================================
+   Engineering Calculator - Prototype Styles
+   ======================================== */
+
+/* CSS Variables */
+:root {
+    /* Colors - Light Theme */
+    --color-bg: #F5F5F7;
+    --color-surface: #FFFFFF;
+    --color-text-primary: #1D1D1F;
+    --color-text-secondary: #86868B;
+    
+    /* Button Colors */
+    --btn-digit-bg: #E4E4E6;
+    --btn-digit-text: #1D1D1F;
+    --btn-digit-hover: #D8D8DA;
+    
+    --btn-function-bg: #A5A5A5;
+    --btn-function-text: #1D1D1F;
+    --btn-function-hover: #8E8E8E;
+    
+    --btn-operator-bg: #FF9500;
+    --btn-operator-text: #FFFFFF;
+    --btn-operator-hover: #E08600;
+    
+    --btn-scientific-bg: #505050;
+    --btn-scientific-text: #FFFFFF;
+    --btn-scientific-hover: #636366;
+    
+    --btn-memory-bg: #007AFF;
+    --btn-memory-text: #FFFFFF;
+    --btn-memory-hover: #0056B3;
+    
+    --btn-equals-bg: #FF9500;
+    --btn-equals-text: #FFFFFF;
+    
+    /* Display */
+    --display-bg: #FFFFFF;
+    --display-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+    
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    
+    /* Transitions */
+    --duration-fast: 100ms;
+    --duration-normal: 200ms;
+    --duration-slow: 300ms;
+    --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --color-bg: #000000;
+    --color-surface: #1C1C1E;
+    --color-text-primary: #F5F5F7;
+    --color-text-secondary: #98989D;
+    
+    --btn-digit-bg: #505050;
+    --btn-digit-text: #FFFFFF;
+    --btn-digit-hover: #636366;
+    
+    --btn-function-bg: #636366;
+    --btn-function-text: #FFFFFF;
+    --btn-function-hover: #7C7C80;
+    
+    --btn-operator-bg: #FF9F0A;
+    --btn-operator-hover: #FFB340;
+    
+    --btn-scientific-bg: #3A3A3C;
+    --btn-scientific-hover: #48484A;
+    
+    --btn-memory-bg: #0A84FF;
+    --btn-memory-hover: #409CFF;
+    
+    --btn-equals-bg: #FF9F0A;
+    
+    --display-bg: #2C2C2E;
+    --display-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Base */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-md);
+    transition: background-color var(--duration-slow) var(--ease-out),
+                color var(--duration-slow) var(--ease-out);
+}
+
+/* Calculator Container */
+.calculator {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-lg);
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    position: relative;
+    transition: background-color var(--duration-slow) var(--ease-out);
+}
+
+/* Header */
+.calculator-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.calculator-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.theme-toggle,
+.history-toggle {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.theme-toggle:hover,
+.history-toggle:hover {
+    background-color: var(--btn-digit-bg);
+}
+
+.icon-moon {
+    display: none;
+}
+
+[data-theme="dark"] .icon-sun {
+    display: none;
+}
+
+[data-theme="dark"] .icon-moon {
+    display: inline;
+}
+
+/* Display */
+.display {
+    background-color: var(--display-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-md);
+    box-shadow: var(--display-shadow);
+    position: relative;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+.display-expression {
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-sm);
+    word-break: break-all;
+    text-align: right;
+    width: 100%;
+}
+
+.display-result {
+    font-family: 'SF Mono', Menlo, Monaco, monospace;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1;
+    word-break: break-all;
+    text-align: right;
+    width: 100%;
+}
+
+.display-indicators {
+    position: absolute;
+    top: var(--space-sm);
+    left: var(--space-md);
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.indicator {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    opacity: 0.7;
+}
+
+.indicator-memory {
+    background-color: var(--btn-memory-bg);
+    color: white;
+    display: none;
+}
+
+.indicator-memory.active {
+    display: inline;
+}
+
+.indicator-mode {
+    background-color: var(--btn-scientific-bg);
+    color: white;
+}
+
+/* Mode Selector */
+.mode-selector {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.mode-toggle {
+    display: flex;
+    background-color: var(--btn-digit-bg);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+}
+
+.mode-btn {
+    background: none;
+    border: none;
+    padding: var(--space-xs) var(--space-md);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.mode-btn.active {
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.second-btn {
+    background-color: var(--btn-scientific-bg);
+    color: var(--btn-scientific-text);
+    border: none;
+    padding: var(--space-xs) var(--space-md);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.second-btn:hover {
+    background-color: var(--btn-scientific-hover);
+}
+
+.second-btn.active {
+    background-color: var(--btn-operator-bg);
+    color: var(--btn-operator-text);
+}
+
+/* Memory Buttons */
+.memory-buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.btn-memory {
+    background-color: var(--btn-memory-bg);
+    color: var(--btn-memory-text);
+    font-size: 12px;
+    padding: var(--space-sm);
+}
+
+.btn-memory:hover {
+    background-color: var(--btn-memory-hover);
+}
+
+/* Scientific Functions */
+.scientific-functions {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.btn-scientific {
+    background-color: var(--btn-scientific-bg);
+    color: var(--btn-scientific-text);
+    font-size: 13px;
+    padding: var(--space-sm) var(--space-xs);
+}
+
+.btn-scientific:hover {
+    background-color: var(--btn-scientific-hover);
+}
+
+/* Basic Keypad */
+.basic-keypad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-sm);
+}
+
+/* Button Base */
+.btn {
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: var(--space-md);
+    transition: all var(--duration-fast) var(--ease-out);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--btn-operator-bg);
+    outline-offset: 2px;
+}
+
+/* Button Types */
+.btn-digit {
+    background-color: var(--btn-digit-bg);
+    color: var(--btn-digit-text);
+    aspect-ratio: 1;
+}
+
+.btn-digit:hover {
+    background-color: var(--btn-digit-hover);
+}
+
+.btn-zero {
+    grid-column: span 2;
+    aspect-ratio: auto;
+}
+
+.btn-function {
+    background-color: var(--btn-function-bg);
+    color: var(--btn-function-text);
+    aspect-ratio: 1;
+}
+
+.btn-function:hover {
+    background-color: var(--btn-function-hover);
+}
+
+.btn-operator {
+    background-color: var(--btn-operator-bg);
+    color: var(--btn-operator-text);
+    aspect-ratio: 1;
+}
+
+.btn-operator:hover {
+    background-color: var(--btn-operator-hover);
+}
+
+.btn-operator.active {
+    background-color: var(--btn-operator-text);
+    color: var(--btn-operator-bg);
+}
+
+.btn-equals {
+    background-color: var(--btn-equals-bg);
+    color: var(--btn-equals-text);
+    aspect-ratio: 1;
+}
+
+.btn-equals:hover {
+    background-color: var(--btn-operator-hover);
+}
+
+/* History Panel */
+.history-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-lg);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all var(--duration-slow) var(--ease-out);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+}
+
+.history-panel.active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--btn-digit-bg);
+}
+
+.history-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.history-clear {
+    background: none;
+    border: none;
+    color: var(--btn-memory-bg);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.history-clear:hover {
+    text-decoration: underline;
+}
+
+.history-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.history-empty {
+    color: var(--color-text-secondary);
+    text-align: center;
+    padding: var(--space-xl);
+}
+
+.history-item {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--btn-digit-bg);
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.history-item:hover {
+    background-color: var(--btn-digit-bg);
+}
+
+.history-expression {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.history-result {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .calculator {
+        padding: var(--space-md);
+        border-radius: var(--radius-lg);
+    }
+    
+    .display-result {
+        font-size: 36px;
+    }
+    
+    .scientific-functions {
+        display: none;
+    }
+    
+    .calculator.show-scientific .scientific-functions {
+        display: grid;
+    }
+    
+    .btn {
+        padding: var(--space-sm);
+        font-size: 18px;
+    }
+    
+    .btn-scientific {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 360px) {
+    .display-result {
+        font-size: 28px;
+    }
+    
+    .btn {
+        font-size: 16px;
+    }
+}
+
+/* Keyboard focus styles */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Error state */
+.display.error .display-result {
+    color: #FF3B30;
+}
+
+/* Scientific mode indicator */
+.btn-scientific sup {
+    font-size: 10px;
+    vertical-align: super;
+}
