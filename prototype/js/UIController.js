@@ -1,16 +1,73 @@
 /**
- * UIController - Handles all user interactions (clicks, keyboard events)
- * Implements the Controller part of MVC pattern
+ * @fileoverview UIController - User interaction handling
+ * @description Implements the Controller component of the MVC pattern.
+ * Handles all user interactions including mouse clicks, keyboard input,
+ * touch events, and translates them into calculator operations.
+ * 
+ * @module UIController
+ * @version 1.0.0
+ * 
+ * @example
+ * import { UIController } from './UIController.js';
+ * 
+ * const controller = new UIController(model, view);
+ * 
+ * // Programmatic input
+ * controller.handleDigitInput('5');
+ * controller.handleOperatorInput('+');
+ * controller.handleFunctionInput('sin');
+ * controller.handleActionInput('calculate');
+ * 
+ * // Keyboard shortcuts are automatically bound:
+ * // 0-9     : Digits
+ * // + - * / : Operators
+ * // Enter   : Calculate
+ * // Escape  : Clear
+ * // s c t   : sin, cos, tan
+ * // etc.
  */
 
+/**
+ * Keyboard action types
+ * @typedef {'digit'|'operator'|'function'|'constant'|'action'} ActionType
+ */
+
+/**
+ * Keyboard mapping entry
+ * @typedef {Object} KeyboardMapping
+ * @property {ActionType} type - Type of action
+ * @property {string} value - Value or action name
+ * @property {boolean} [preventDefault] - Whether to prevent default browser action
+ */
+
+/**
+ * UIController - handles user interactions
+ * @class UIController
+ */
 class UIController {
+    /**
+     * Create a new UIController instance
+     * @constructor
+     * @param {CalculatorModel} model - Calculator model instance
+     * @param {DisplayView} view - Display view instance
+     */
     constructor(model, view) {
+        /** @type {CalculatorModel} Reference to the model */
         this.model = model;
+        
+        /** @type {DisplayView} Reference to the view */
         this.view = view;
         
+        /** @type {Object<string, KeyboardMapping>} Keyboard shortcut mappings */
         this.keyboardMap = this.createKeyboardMap();
+        
+        /** @type {number} Timestamp of touch start (for long press detection) */
         this.touchStartTime = 0;
+        
+        /** @type {number|null} Timer ID for long press detection */
         this.longPressTimer = null;
+        
+        /** @type {number} Long press threshold in milliseconds */
         this.longPressDelay = 500;
         
         this.init();

@@ -1,12 +1,57 @@
 /**
- * DisplayView - Handles all UI rendering and visual updates
- * Implements the View part of MVC pattern
+ * @fileoverview DisplayView - UI rendering and visual updates
+ * @description Implements the View component of the MVC pattern.
+ * Handles all visual rendering, theme management, animations,
+ * and provides visual feedback for user interactions.
+ * 
+ * @module DisplayView
+ * @version 1.0.0
+ * 
+ * @example
+ * import { DisplayView } from './DisplayView.js';
+ * 
+ * const view = new DisplayView();
+ * 
+ * // Update display
+ * view.updateDisplay('123.456');
+ * view.updateExpression('sin(30) + cos(60)');
+ * 
+ * // Theme management
+ * view.setTheme('dark');    // 'light', 'dark', 'high-contrast'
+ * view.toggleTheme();
+ * 
+ * // Visual feedback
+ * view.showError('DIVISION_BY_ZERO');
+ * view.flashKey('sin');     // Highlight a key
+ * view.showFunctionFeedback('sqrt', 144, 12);
+ * 
+ * // Indicators
+ * view.showMemoryIndicator();
+ * view.showAngleMode('RAD');
  */
 
+/**
+ * Theme options
+ * @typedef {'light'|'dark'|'high-contrast'} Theme
+ */
+
+/**
+ * DisplayView - manages all UI rendering
+ * @class DisplayView
+ */
 class DisplayView {
+    /**
+     * Create a new DisplayView instance
+     * @constructor
+     */
     constructor() {
+        /** @type {Object<string, HTMLElement>} Cached DOM elements */
         this.elements = {};
+        
+        /** @type {number} Animation duration in milliseconds */
         this.animationDuration = 100;
+        
+        /** @type {number|null} Timeout ID for error display */
         this.errorTimeout = null;
         
         this.init();

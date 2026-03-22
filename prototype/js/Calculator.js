@@ -1,17 +1,51 @@
 /**
- * Calculator - Main application entry point
- * Coordinates Model, View, and Controller (MVC pattern)
+ * @fileoverview Calculator - Main application entry point
+ * @description Coordinates Model, View, and Controller components using the MVC pattern.
+ * Handles application lifecycle, state persistence, and provides external API.
+ * 
+ * @module Calculator
+ * @version 1.0.0
+ * @author Engineering Calculator Project
+ * 
+ * @example
+ * // Auto-initialization on DOMContentLoaded
+ * // Access via window.calculator
+ * window.calculator.evaluate('2 + 3');
+ * window.calculator.getValue();
+ * 
+ * @example
+ * // Manual initialization
+ * import { Calculator } from './Calculator.js';
+ * const calc = new Calculator();
+ * calc.setValue('42');
  */
 
 import { CalculatorModel } from './CalculatorModel.js';
 import { DisplayView } from './DisplayView.js';
 import { UIController } from './UIController.js';
 
+/**
+ * Main Calculator application class
+ * @class Calculator
+ * @description Orchestrates the MVC components and manages application state
+ */
 class Calculator {
+    /**
+     * Creates a new Calculator instance
+     * @constructor
+     * @description Initializes Model, View, Controller and sets up persistence
+     */
     constructor() {
+        /** @type {CalculatorModel|null} */
         this.model = null;
+        
+        /** @type {DisplayView|null} */
         this.view = null;
+        
+        /** @type {UIController|null} */
         this.controller = null;
+        
+        /** @type {string} localStorage key for state persistence */
         this.storageKey = 'calculator-state';
         
         this.init();
@@ -105,14 +139,24 @@ class Calculator {
     }
     
     /**
-     * Get current calculator value (for external access)
+     * Get current calculator value
+     * @public
+     * @returns {string} Current display value
+     * @example
+     * const value = calculator.getValue();
+     * console.log(value); // "123.456"
      */
     getValue() {
         return this.model.getCurrentValue();
     }
     
     /**
-     * Set calculator value (for external access)
+     * Set calculator value programmatically
+     * @public
+     * @param {string|number} value - Value to set
+     * @example
+     * calculator.setValue(42);
+     * calculator.setValue("3.14159");
      */
     setValue(value) {
         this.model.setCurrentValue(value);
@@ -120,14 +164,26 @@ class Calculator {
     }
     
     /**
-     * Evaluate expression string (for external access)
+     * Evaluate the current expression
+     * @public
+     * @returns {Object} Result object with value or error
+     * @property {boolean} success - Whether evaluation succeeded
+     * @property {number} [value] - Calculated result (if success)
+     * @property {string} [error] - Error message (if failed)
+     * @example
+     * const result = calculator.evaluate();
+     * if (result.success) {
+     *   console.log('Result:', result.value);
+     * }
      */
     evaluate(expression) {
         return this.model.calculate();
     }
     
     /**
-     * Destroy calculator instance
+     * Destroy calculator instance and cleanup resources
+     * @public
+     * @description Saves state, removes event listeners, and nullifies references
      */
     destroy() {
         this.saveState();

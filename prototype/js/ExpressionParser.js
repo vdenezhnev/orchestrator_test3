@@ -1,19 +1,70 @@
 /**
- * ExpressionParser - Parses and evaluates mathematical expressions
+ * @fileoverview ExpressionParser - Mathematical expression parser and evaluator
+ * @description Implements the Shunting-yard algorithm for parsing infix mathematical
+ * expressions into postfix notation (Reverse Polish Notation) and evaluates them.
  * 
- * Features:
- * - Tokenization of infix expressions
- * - Shunting-yard algorithm for infix to postfix conversion
- * - Postfix evaluation with support for:
- *   - Basic operators (+, -, *, /, ^, %)
- *   - Parentheses with proper nesting
- *   - Unary minus/plus
- *   - Scientific functions (sin, cos, tan, log, ln, sqrt, etc.)
- *   - Constants (π, e)
+ * @module ExpressionParser
+ * @version 1.0.0
+ * 
+ * @example
+ * import { ExpressionParser } from './ExpressionParser.js';
+ * 
+ * const parser = new ExpressionParser({ isDegreeMode: true });
+ * 
+ * // Basic arithmetic
+ * parser.evaluate('2 + 3 * 4');        // { success: true, value: 14 }
+ * 
+ * // Trigonometry (degrees)
+ * parser.evaluate('sin(30)');          // { success: true, value: 0.5 }
+ * 
+ * // Complex expressions
+ * parser.evaluate('sqrt(3^2 + 4^2)');  // { success: true, value: 5 }
+ * 
+ * // Scientific notation
+ * parser.evaluate('1.5e3 + 2e-2');     // { success: true, value: 1500.02 }
+ * 
+ * @see {@link https://en.wikipedia.org/wiki/Shunting-yard_algorithm|Shunting-yard Algorithm}
  */
 
+/**
+ * Token type definitions
+ * @typedef {'number'|'operator'|'function'|'lparen'|'rparen'|'comma'|'unary'|'postfix'} TokenType
+ */
+
+/**
+ * Token object
+ * @typedef {Object} Token
+ * @property {TokenType} type - Token type
+ * @property {string|number} value - Token value
+ * @property {number} [precedence] - Operator precedence (for operators)
+ */
+
+/**
+ * Evaluation result
+ * @typedef {Object} EvaluationResult
+ * @property {boolean} success - Whether evaluation succeeded
+ * @property {number} [value] - Calculated value (if success)
+ * @property {string} [error] - Error message (if failed)
+ */
+
+/**
+ * Parser options
+ * @typedef {Object} ParserOptions
+ * @property {boolean} [isDegreeMode=true] - Use degrees for trig functions (false = radians)
+ */
+
+/**
+ * Mathematical expression parser using Shunting-yard algorithm
+ * @class ExpressionParser
+ */
 class ExpressionParser {
+    /**
+     * Create a new ExpressionParser instance
+     * @constructor
+     * @param {ParserOptions} [options={}] - Parser configuration
+     */
     constructor(options = {}) {
+        /** @type {boolean} Whether to use degrees for trigonometric functions */
         this.isDegreeMode = options.isDegreeMode !== false;
         
         this.operators = {

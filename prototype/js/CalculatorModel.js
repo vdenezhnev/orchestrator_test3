@@ -1,23 +1,99 @@
 /**
- * CalculatorModel - Manages calculator state and business logic
- * Implements the Model part of MVC pattern
+ * @fileoverview CalculatorModel - Calculator state management and business logic
+ * @description Implements the Model component of the MVC pattern.
+ * Manages calculator state, performs calculations, handles memory operations,
+ * and maintains calculation history.
  * 
- * Supports two modes:
- * 1. Simple mode - step-by-step calculation (default)
- * 2. Expression mode - full infix expression parsing with Shunting-yard algorithm
+ * @module CalculatorModel
+ * @version 1.0.0
+ * 
+ * @example
+ * import { CalculatorModel } from './CalculatorModel.js';
+ * 
+ * const model = new CalculatorModel();
+ * 
+ * // Simple calculation
+ * model.inputDigit('5');
+ * model.inputOperator('+');
+ * model.inputDigit('3');
+ * const result = model.calculate(); // { value: 8, expression: '5 + 3' }
+ * 
+ * // Expression mode
+ * model.setExpressionMode(true);
+ * model.inputDigit('2');
+ * model.inputParenthesis('(');
+ * model.inputDigit('3');
+ * model.inputOperator('+');
+ * model.inputDigit('4');
+ * model.inputParenthesis(')');
+ * const result2 = model.calculate(); // { value: 14, expression: '2(3+4)' }
+ * 
+ * // Memory operations
+ * model.memoryStore();     // Store current value
+ * model.memoryRecall();    // Recall stored value
+ * model.memoryAdd();       // Add to memory
+ * model.memorySubtract();  // Subtract from memory
+ * model.memoryClear();     // Clear memory
  */
 
 import { ExpressionParser } from './ExpressionParser.js';
 import { ErrorHandler } from './ErrorHandler.js';
 
+/**
+ * Calculator display state
+ * @typedef {Object} DisplayState
+ * @property {string} currentValue - Current displayed value
+ * @property {string} expression - Current expression string
+ * @property {boolean} hasMemory - Whether memory contains a value
+ * @property {string} angleMode - 'DEG' or 'RAD'
+ * @property {boolean} isSecondMode - Whether 2nd function mode is active
+ * @property {number} openParentheses - Count of unclosed parentheses
+ */
+
+/**
+ * Calculation result
+ * @typedef {Object} CalculationResult
+ * @property {number} value - Calculated result
+ * @property {string} expression - Expression that was calculated
+ * @property {string} [error] - Error message if calculation failed
+ */
+
+/**
+ * History entry
+ * @typedef {Object} HistoryEntry
+ * @property {string} expression - The expression that was evaluated
+ * @property {number} result - The calculation result
+ * @property {number} timestamp - Unix timestamp of when calculation occurred
+ */
+
+/**
+ * Calculator Model - manages state and performs calculations
+ * @class CalculatorModel
+ */
 class CalculatorModel {
+    /**
+     * Create a new CalculatorModel instance
+     * @constructor
+     */
     constructor() {
         this.reset();
+        
+        /** @type {HistoryEntry[]} Calculation history */
         this.history = [];
+        
+        /** @type {number} Maximum history entries to keep */
         this.maxHistoryLength = 50;
+        
+        /** @type {ExpressionParser} Parser for mathematical expressions */
         this.expressionParser = new ExpressionParser({ isDegreeMode: true });
+        
+        /** @type {ErrorHandler} Error handling utility */
         this.errorHandler = new ErrorHandler();
+        
+        /** @type {boolean} Whether expression mode is enabled */
         this.expressionMode = false;
+        
+        /** @type {string|null} Last error that occurred */
         this.lastError = null;
     }
     

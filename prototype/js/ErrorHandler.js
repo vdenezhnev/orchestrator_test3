@@ -1,16 +1,85 @@
 /**
- * ErrorHandler - Centralized error handling and validation
+ * @fileoverview ErrorHandler - Centralized error handling and validation
+ * @description Provides comprehensive error handling, input validation,
+ * and user-friendly error messages for the calculator application.
  * 
- * Provides:
- * - Error classification and user-friendly messages
- * - Input validation and blocking
- * - Syntax error detection
- * - Mathematical error handling (division by zero, etc.)
+ * @module ErrorHandler
+ * @version 1.0.0
+ * 
+ * @example
+ * import { ErrorHandler } from './ErrorHandler.js';
+ * 
+ * const handler = new ErrorHandler();
+ * 
+ * // Get error details
+ * const error = handler.getErrorDetails('DIVISION_BY_ZERO');
+ * console.log(error.message); // "Невозможно разделить на ноль"
+ * 
+ * // Validate expression
+ * const validation = handler.validateExpression('(2 + 3');
+ * if (!validation.valid) {
+ *   console.log(validation.errors); // [{ code: 'UNBALANCED_PARENTHESES', ... }]
+ * }
+ * 
+ * // Validate result
+ * const result = handler.validateResult(Infinity);
+ * if (result.warning) {
+ *   console.log('Warning:', result.warning); // 'INFINITY_RESULT'
+ * }
  */
 
+/**
+ * Error severity levels
+ * @typedef {'error'|'warning'|'info'} ErrorSeverity
+ */
+
+/**
+ * Error details object
+ * @typedef {Object} ErrorDetails
+ * @property {string} title - Short error title
+ * @property {string} message - Detailed error message
+ * @property {string} icon - Icon/emoji for the error
+ * @property {ErrorSeverity} severity - Error severity level
+ */
+
+/**
+ * Validation result
+ * @typedef {Object} ValidationResult
+ * @property {boolean} valid - Whether validation passed
+ * @property {string} [error] - Error code (if invalid)
+ * @property {boolean} [block] - Whether to block the input
+ */
+
+/**
+ * Expression validation result
+ * @typedef {Object} ExpressionValidationResult
+ * @property {boolean} valid - Whether expression is valid
+ * @property {Array<{code: string, position: number}>} errors - List of errors found
+ */
+
+/**
+ * Result validation result
+ * @typedef {Object} ResultValidationResult
+ * @property {boolean} valid - Whether result is displayable
+ * @property {string} [error] - Error code (if invalid)
+ * @property {string} [warning] - Warning code (if needs attention)
+ * @property {string|number} [value] - Formatted value (if needs conversion)
+ */
+
+/**
+ * Centralized error handler for calculator operations
+ * @class ErrorHandler
+ */
 class ErrorHandler {
+    /**
+     * Create a new ErrorHandler instance
+     * @constructor
+     */
     constructor() {
+        /** @type {Object<string, ErrorDetails>} Map of error codes to details */
         this.errorMessages = this.createErrorMessages();
+        
+        /** @type {Object<string, Object>} Validation rules for different input types */
         this.validationRules = this.createValidationRules();
     }
     
