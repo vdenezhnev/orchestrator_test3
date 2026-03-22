@@ -394,14 +394,47 @@ class UIController {
      * Handle scientific function input
      */
     handleFunctionInput(func) {
+        const inputValue = this.model.getCurrentValue();
+        const angleMode = this.model.isDegreeMode ? 'deg' : 'rad';
+        
+        const funcKey = document.querySelector(`[data-action="${func}"]`);
+        if (funcKey) {
+            funcKey.classList.add('calculating');
+            setTimeout(() => funcKey.classList.remove('calculating'), 300);
+        }
+        
         const result = this.model.applyFunction(func);
         
         if (result.success) {
             this.view.updateDisplay(this.model.getDisplayState());
-            this.announceForScreenReader(`${func}: ${result.value}`);
+            
+            const trigFunctions = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan'];
+            if (trigFunctions.includes(func)) {
+                this.view.showFunctionFeedback(func, inputValue, result.value, angleMode);
+            }
+            
+            this.announceForScreenReader(this.getFunctionResultAnnouncement(func, inputValue, result.value, angleMode));
         } else {
             this.view.showError(result.error);
             this.announceForScreenReader(`Ошибка: ${result.error}`);
+        }
+    }
+    
+    /**
+     * Get announcement text for function result
+     */
+    getFunctionResultAnnouncement(func, input, output, mode) {
+        const trigFunctions = ['sin', 'cos', 'tan'];
+        const invTrigFunctions = ['asin', 'acos', 'atan'];
+        
+        if (trigFunctions.includes(func)) {
+            const modeLabel = mode === 'rad' ? 'радиан' : 'градусов';
+            return `${func} от ${input} ${modeLabel} равно ${output}`;
+        } else if (invTrigFunctions.includes(func)) {
+            const modeLabel = mode === 'rad' ? 'радиан' : 'градусов';
+            return `${func} от ${input} равно ${output} ${modeLabel}`;
+        } else {
+            return `${func} от ${input} равно ${output}`;
         }
     }
     
@@ -411,16 +444,23 @@ class UIController {
     handleConstantInput(constant) {
         this.model.insertConstant(constant);
         this.view.updateDisplay(this.model.getDisplayState());
-        this.announceForScreenReader(constant === 'pi' ? 'Пи' : 'Число e');
+        
+        const names = { 'pi': 'Пи (3.14159...)', 'e': 'Число Эйлера (2.71828...)' };
+        this.announceForScreenReader(names[constant] || constant);
     }
     
     /**
      * Handle mode change (DEG/RAD)
      */
     handleModeChange(mode) {
+        const previousMode = this.model.isDegreeMode ? 'deg' : 'rad';
+        
         this.model.setAngleMode(mode);
-        this.view.updateModeIndicator(mode);
-        this.announceForScreenReader(mode === 'deg' ? 'Режим градусы' : 'Режим радианы');
+        this.view.updateModeIndicator(mode.toUpperCase());
+        
+        const modeNames = { 'deg': 'градусы', 'rad': 'радианы' };
+        this.view.showFeedback(`Режим: ${modeNames[mode]}`);
+        this.announceForScreenReader(`Переключено на ${modeNames[mode]}`);
     }
     
     /**

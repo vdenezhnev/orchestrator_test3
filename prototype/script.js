@@ -233,6 +233,7 @@ var Calculator = (function() {
     Calculator.prototype.setMode = function(mode) {
         this.isDegreeMode = mode === 'deg';
         this.modeIndicator.textContent = mode.toUpperCase();
+        this.modeIndicator.classList.toggle('indicator--rad', mode === 'rad');
         
         var modeBtns = document.querySelectorAll('.mode-selector__btn');
         for (var i = 0; i < modeBtns.length; i++) {
@@ -242,7 +243,24 @@ var Calculator = (function() {
             btn.setAttribute('aria-checked', isActive);
         }
         
-        this.announceForScreenReader(mode === 'deg' ? 'Режим градусы' : 'Режим радианы');
+        this.updateTrigFunctionLabels(mode);
+        this.showFeedback(mode === 'deg' ? 'Режим: градусы' : 'Режим: радианы');
+        this.announceForScreenReader(mode === 'deg' ? 'Переключено на градусы' : 'Переключено на радианы');
+    };
+    
+    Calculator.prototype.updateTrigFunctionLabels = function(mode) {
+        var trigFunctions = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan'];
+        var isRad = mode === 'rad';
+        
+        for (var i = 0; i < trigFunctions.length; i++) {
+            var func = trigFunctions[i];
+            var btn = document.querySelector('[data-action="' + func + '"]');
+            if (btn) {
+                btn.classList.toggle('key--rad-mode', isRad);
+                var tooltip = isRad ? func + ' (радианы)' : func + ' (градусы)';
+                btn.setAttribute('title', tooltip);
+            }
+        }
     };
     
     Calculator.prototype.handleKey = function(key) {

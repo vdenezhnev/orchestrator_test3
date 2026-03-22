@@ -95,36 +95,36 @@
         <!-- Scientific Functions Keys -->
         <section class="keypad keypad--scientific" aria-label="Научные функции">
             <!-- Row 1: Trigonometry -->
-            <button class="key key--scientific" type="button" data-action="sin" aria-label="Синус">sin</button>
-            <button class="key key--scientific" type="button" data-action="cos" aria-label="Косинус">cos</button>
-            <button class="key key--scientific" type="button" data-action="tan" aria-label="Тангенс">tan</button>
-            <button class="key key--scientific" type="button" data-action="log" aria-label="Десятичный логарифм">log</button>
-            <button class="key key--scientific" type="button" data-action="ln" aria-label="Натуральный логарифм">ln</button>
-            <button class="key key--scientific" type="button" data-action="pi" aria-label="Число пи">π</button>
+            <button class="key key--scientific key--trig" type="button" data-action="sin" data-shortcut="s" aria-label="Синус" title="sin (градусы)">sin</button>
+            <button class="key key--scientific key--trig" type="button" data-action="cos" data-shortcut="c" aria-label="Косинус" title="cos (градусы)">cos</button>
+            <button class="key key--scientific key--trig" type="button" data-action="tan" data-shortcut="t" aria-label="Тангенс" title="tan (градусы)">tan</button>
+            <button class="key key--scientific" type="button" data-action="log" data-shortcut="l" aria-label="Десятичный логарифм" title="log₁₀">log</button>
+            <button class="key key--scientific" type="button" data-action="ln" data-shortcut="n" aria-label="Натуральный логарифм" title="ln (logₑ)">ln</button>
+            <button class="key key--scientific" type="button" data-action="pi" data-shortcut="p" aria-label="Число пи" title="π = 3.14159...">π</button>
 
             <!-- Row 2: Inverse Trigonometry -->
-            <button class="key key--scientific" type="button" data-action="asin" aria-label="Арксинус">asin</button>
-            <button class="key key--scientific" type="button" data-action="acos" aria-label="Арккосинус">acos</button>
-            <button class="key key--scientific" type="button" data-action="atan" aria-label="Арктангенс">atan</button>
-            <button class="key key--scientific" type="button" data-action="10x" aria-label="10 в степени x">10<sup>x</sup></button>
-            <button class="key key--scientific" type="button" data-action="ex" aria-label="e в степени x">e<sup>x</sup></button>
-            <button class="key key--scientific" type="button" data-action="e" aria-label="Число e">e</button>
+            <button class="key key--scientific key--trig" type="button" data-action="asin" aria-label="Арксинус" title="asin (результат в градусах)">asin</button>
+            <button class="key key--scientific key--trig" type="button" data-action="acos" aria-label="Арккосинус" title="acos (результат в градусах)">acos</button>
+            <button class="key key--scientific key--trig" type="button" data-action="atan" aria-label="Арктангенс" title="atan (результат в градусах)">atan</button>
+            <button class="key key--scientific" type="button" data-action="10x" aria-label="10 в степени x" title="10 в степени x">10<sup>x</sup></button>
+            <button class="key key--scientific" type="button" data-action="ex" aria-label="e в степени x" title="e в степени x">e<sup>x</sup></button>
+            <button class="key key--scientific" type="button" data-action="e" data-shortcut="e" aria-label="Число e" title="e = 2.71828...">e</button>
 
             <!-- Row 3: Powers & Roots -->
-            <button class="key key--scientific" type="button" data-action="x2" aria-label="Квадрат">x<sup>2</sup></button>
-            <button class="key key--scientific" type="button" data-action="x3" aria-label="Куб">x<sup>3</sup></button>
-            <button class="key key--scientific" type="button" data-action="xn" aria-label="Степень n">x<sup>n</sup></button>
-            <button class="key key--scientific" type="button" data-action="sqrt" aria-label="Квадратный корень">√x</button>
-            <button class="key key--scientific" type="button" data-action="cbrt" aria-label="Кубический корень">∛x</button>
-            <button class="key key--scientific" type="button" data-action="nroot" aria-label="Корень степени n">ⁿ√x</button>
+            <button class="key key--scientific" type="button" data-action="x2" aria-label="Квадрат" title="x²">x<sup>2</sup></button>
+            <button class="key key--scientific" type="button" data-action="x3" aria-label="Куб" title="x³">x<sup>3</sup></button>
+            <button class="key key--scientific" type="button" data-action="xn" data-shortcut="^" aria-label="Степень n" title="xⁿ">x<sup>n</sup></button>
+            <button class="key key--scientific" type="button" data-action="sqrt" data-shortcut="r" aria-label="Квадратный корень" title="√x">√x</button>
+            <button class="key key--scientific" type="button" data-action="cbrt" aria-label="Кубический корень" title="∛x">∛x</button>
+            <button class="key key--scientific" type="button" data-action="nroot" aria-label="Корень степени n" title="ⁿ√x">ⁿ√x</button>
 
             <!-- Row 4: Special Functions -->
-            <button class="key key--scientific" type="button" data-action="abs" aria-label="Модуль числа">|x|</button>
-            <button class="key key--scientific" type="button" data-action="factorial" aria-label="Факториал">n!</button>
-            <button class="key key--scientific" type="button" data-action="inverse" aria-label="Обратное число">1/x</button>
-            <button class="key key--scientific" type="button" data-action="exp" aria-label="Экспоненциальная запись">EXP</button>
-            <button class="key key--scientific" type="button" data-action="lparen" aria-label="Открывающая скобка">(</button>
-            <button class="key key--scientific" type="button" data-action="rparen" aria-label="Закрывающая скобка">)</button>
+            <button class="key key--scientific" type="button" data-action="abs" aria-label="Модуль числа" title="|x|">|x|</button>
+            <button class="key key--scientific" type="button" data-action="factorial" data-shortcut="!" aria-label="Факториал" title="n!">n!</button>
+            <button class="key key--scientific" type="button" data-action="inverse" aria-label="Обратное число" title="1/x">1/x</button>
+            <button class="key key--scientific" type="button" data-action="exp" aria-label="Экспоненциальная запись" title="Научная нотация">EXP</button>
+            <button class="key key--scientific" type="button" data-action="lparen" data-shortcut="(" aria-label="Открывающая скобка">(</button>
+            <button class="key key--scientific" type="button" data-action="rparen" data-shortcut=")" aria-label="Закрывающая скобка">)</button>
         </section>
 
         <!-- Basic Keypad -->

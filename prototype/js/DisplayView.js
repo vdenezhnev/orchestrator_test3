@@ -154,12 +154,36 @@ class DisplayView {
         const indicator = this.elements.modeIndicator;
         if (!indicator) return;
         
-        indicator.textContent = mode || 'DEG';
+        const modeUpper = (mode || 'DEG').toUpperCase();
+        const modeLower = modeUpper.toLowerCase();
+        
+        indicator.textContent = modeUpper;
+        indicator.classList.toggle('indicator--rad', modeLower === 'rad');
         
         document.querySelectorAll('.mode-selector__btn').forEach(btn => {
-            const isActive = btn.dataset.mode === mode.toLowerCase();
+            const isActive = btn.dataset.mode === modeLower;
             btn.classList.toggle('mode-selector__btn--active', isActive);
             btn.setAttribute('aria-checked', isActive);
+        });
+        
+        this.updateTrigFunctionLabels(modeLower);
+    }
+    
+    /**
+     * Update trig function button labels based on mode
+     */
+    updateTrigFunctionLabels(mode) {
+        const trigFunctions = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan'];
+        const isRad = mode === 'rad';
+        
+        trigFunctions.forEach(func => {
+            const btn = document.querySelector(`[data-action="${func}"]`);
+            if (btn) {
+                btn.classList.toggle('key--rad-mode', isRad);
+                
+                const tooltip = isRad ? `${func} (радианы)` : `${func} (градусы)`;
+                btn.setAttribute('title', tooltip);
+            }
         });
     }
     
@@ -285,6 +309,35 @@ class DisplayView {
         this.errorTimeout = setTimeout(() => {
             this.clearErrorState();
             result.setAttribute('role', 'status');
+        }, 2000);
+    }
+    
+    /**
+     * Show function application feedback
+     */
+    showFunctionFeedback(funcName, input, output, mode) {
+        const expression = this.elements.expression;
+        if (!expression) return;
+        
+        const modeLabel = mode === 'rad' ? 'rad' : '°';
+        let feedbackText;
+        
+        const trigFunctions = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan'];
+        if (trigFunctions.includes(funcName)) {
+            if (funcName.startsWith('a')) {
+                feedbackText = `${funcName}(${input}) = ${output}${modeLabel}`;
+            } else {
+                feedbackText = `${funcName}(${input}${modeLabel}) = ${output}`;
+            }
+        } else {
+            feedbackText = `${funcName}(${input}) = ${output}`;
+        }
+        
+        expression.textContent = feedbackText;
+        expression.classList.add('expression--function');
+        
+        setTimeout(() => {
+            expression.classList.remove('expression--function');
         }, 2000);
     }
     

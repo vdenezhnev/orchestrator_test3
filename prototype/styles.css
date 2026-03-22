@@ -1084,3 +1084,159 @@ body {
     0% { transform: translateY(-2px); opacity: 0.5; }
     100% { transform: translateY(0); opacity: 1; }
 }
+
+/* ===== DEG/RAD Mode Styles ===== */
+
+/* RAD mode indicator styling */
+.indicator--rad {
+    background-color: #10b981 !important;
+}
+
+[data-theme="dark"] .indicator--rad {
+    background-color: #34d399 !important;
+}
+
+/* Mode toggle animation */
+.mode-selector__btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.mode-selector__btn--active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background-color: var(--key-operator-bg);
+    border-radius: 1px;
+}
+
+/* Trig function keys in RAD mode */
+.key--rad-mode {
+    position: relative;
+}
+
+.key--rad-mode::before {
+    content: 'rad';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.5rem;
+    font-weight: 600;
+    color: #10b981;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .key--rad-mode::before {
+    color: #34d399;
+}
+
+/* Expression function feedback */
+.expression--function {
+    color: var(--key-operator-bg) !important;
+    font-weight: 500;
+}
+
+/* Scientific function key hover tooltip */
+.key--scientific {
+    position: relative;
+}
+
+.key--scientific[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background-color: var(--color-text-primary);
+    color: var(--color-bg);
+    font-size: 0.625rem;
+    white-space: nowrap;
+    border-radius: var(--radius-xs);
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    animation: tooltip-fade-in 0.2s ease-out 0.5s forwards;
+}
+
+@keyframes tooltip-fade-in {
+    to {
+        opacity: 1;
+    }
+}
+
+/* Highlight scientific functions on hover */
+.key--scientific:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-key-hover), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Active trig function visual feedback */
+.key--scientific.calculating {
+    animation: pulse-function 0.3s ease-out;
+}
+
+@keyframes pulse-function {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color: var(--key-operator-bg); }
+    100% { transform: scale(1); }
+}
+
+/* Mode switch transition */
+.mode-selector__toggle {
+    transition: background-color var(--duration-normal) var(--ease-out);
+}
+
+.mode-selector__btn {
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-spring);
+}
+
+.mode-selector__btn:active {
+    transform: scale(0.95);
+}
+
+/* Keyboard shortcut hints */
+.key--scientific[data-shortcut]::after {
+    content: attr(data-shortcut);
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 0.5rem;
+    opacity: 0;
+    color: var(--color-text-secondary);
+    transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.calculator:focus-within .key--scientific[data-shortcut]::after {
+    opacity: 0.5;
+}
+
+/* Function result highlight */
+.display__result.function-result {
+    color: var(--key-operator-bg);
+    transition: color var(--duration-normal) var(--ease-out);
+}
+
+/* Scientific keypad section header (mobile) */
+@media (max-width: 480px) {
+    .keypad--scientific::before {
+        content: 'Scientific';
+        display: block;
+        grid-column: 1 / -1;
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--color-text-secondary);
+        padding-bottom: var(--space-xs);
+        text-align: center;
+    }
+}
