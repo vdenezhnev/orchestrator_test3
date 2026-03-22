@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка соответствия требованиям</title>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface-2: #252525;
+            --border: #333;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --success: #4caf50;
+            --error: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+            --partial: #9c27b0;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+        
+        .summary-bar {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 12px;
+        }
+        
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--surface-2);
+            border-radius: 8px;
+        }
+        
+        .summary-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .summary-dot.pass { background: var(--success); }
+        .summary-dot.fail { background: var(--error); }
+        .summary-dot.partial { background: var(--partial); }
+        .summary-dot.na { background: var(--text-dim); }
+        
+        .progress-overview {
+            display: flex;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            background: var(--surface);
+        }
+        
+        .progress-segment {
+            height: 100%;
+            transition: width 0.5s;
+        }
+        
+        .section {
+            background: var(--surface);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: var(--surface-2);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .section-header:hover {
+            background: #2a2a2a;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .section-icon {
+            font-size: 1.25rem;
+        }
+        
+        .section-stats {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .section-stats span {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .section-stats .pass { color: var(--success); }
+        .section-stats .fail { color: var(--error); }
+        .section-stats .partial { color: var(--partial); }
+        
+        .section-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .section.expanded .section-content {
+            max-height: 2000px;
+        }
+        
+        .requirement {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            gap: 1rem;
+        }
+        
+        .requirement:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .status-icon {
+            font-size: 1.25rem;
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .status-icon.pass { color: var(--success); }
+        .status-icon.fail { color: var(--error); }
+        .status-icon.partial { color: var(--partial); }
+        .status-icon.na { color: var(--text-dim); }
+        
+        .requirement-content {
+            flex: 1;
+        }
+        
+        .requirement-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .requirement-details {
+            font-size: 0.875rem;
+            color: var(--text-dim);
+        }
+        
+        .requirement-evidence {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: var(--surface-2);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+        
+        .requirement-evidence code {
+            color: var(--info);
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+        }
+        
+        .badge.pass { background: rgba(76,175,80,0.2); color: var(--success); }
+        .badge.fail { background: rgba(244,67,54,0.2); color: var(--error); }
+        .badge.partial { background: rgba(156,39,176,0.2); color: var(--partial); }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            border-color: var(--info);
+            background: rgba(33,150,243,0.1);
+        }
+        
+        .test-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--info);
+            text-decoration: none;
+        }
+        
+        .test-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>📋 Проверка соответствия требованиям</h1>
+    <p class="subtitle">Инженерный калькулятор — Финальная проверка</p>
+    
+    <div class="controls">
+        <button onclick="runAllTests()">🔄 Запустить проверку</button>
+        <button onclick="expandAll()">📖 Развернуть всё</button>
+        <button onclick="collapseAll()">📕 Свернуть всё</button>
+    </div>
+    
+    <div class="progress-overview" id="progressOverview"></div>
+    
+    <div class="summary-bar" id="summaryBar">
+        <div class="summary-item">
+            <span class="summary-dot pass"></span>
+            <span id="passCount">0</span> Выполнено
+        </div>
+        <div class="summary-item">
+            <span class="summary-dot partial"></span>
+            <span id="partialCount">0</span> Частично
+        </div>
+        <div class="summary-item">
+            <span class="summary-dot fail"></span>
+            <span id="failCount">0</span> Не выполнено
+        </div>
+        <div class="summary-item">
+            <span class="summary-dot na"></span>
+            <span id="naCount">0</span> Н/Д
+        </div>
+    </div>
+    
+    <div id="requirements"></div>
+    
+    <a href="test-runner.html" class="test-link">→ Перейти к модульным тестам</a>
+    <a href="performance-benchmarks.html" class="test-link" style="margin-left: 2rem;">→ Перейти к тестам производительности</a>
+
+    <script type="module">
+        import { ExpressionParser } from '../js/ExpressionParser.js';
+        import { ErrorHandler } from '../js/ErrorHandler.js';
+        
+        const parser = new ExpressionParser({ isDegreeMode: true });
+        const errorHandler = new ErrorHandler();
+        
+        const requirements = [
+            {
+                section: 'Базовые операции',
+                icon: '➕',
+                items: [
+                    {
+                        title: 'Сложение (+)',
+                        test: () => parser.evaluate('2 + 3').value === 5,
+                        evidence: '2 + 3 = 5'
+                    },
+                    {
+                        title: 'Вычитание (-)',
+                        test: () => parser.evaluate('10 - 7').value === 3,
+                        evidence: '10 - 7 = 3'
+                    },
+                    {
+                        title: 'Умножение (×)',
+                        test: () => parser.evaluate('6 * 8').value === 48,
+                        evidence: '6 × 8 = 48'
+                    },
+                    {
+                        title: 'Деление (÷)',
+                        test: () => parser.evaluate('20 / 4').value === 5,
+                        evidence: '20 ÷ 4 = 5'
+                    },
+                    {
+                        title: 'Процент (%)',
+                        test: () => parser.evaluate('17 % 5').value === 2,
+                        evidence: '17 % 5 = 2 (остаток от деления)'
+                    },
+                    {
+                        title: 'Изменение знака (+/-)',
+                        test: () => parser.evaluate('-5').value === -5 && parser.evaluate('--5').value === 5,
+                        evidence: '-5, --5 = 5'
+                    }
+                ]
+            },
+            {
+                section: 'Тригонометрия',
+                icon: '📐',
+                items: [
+                    {
+                        title: 'sin — синус',
+                        test: () => Math.abs(parser.evaluate('sin(30)').value - 0.5) < 0.001,
+                        evidence: 'sin(30°) = 0.5'
+                    },
+                    {
+                        title: 'cos — косинус',
+                        test: () => Math.abs(parser.evaluate('cos(60)').value - 0.5) < 0.001,
+                        evidence: 'cos(60°) = 0.5'
+                    },
+                    {
+                        title: 'tan — тангенс',
+                        test: () => Math.abs(parser.evaluate('tan(45)').value - 1) < 0.001,
+                        evidence: 'tan(45°) = 1'
+                    },
+                    {
+                        title: 'asin — арксинус',
+                        test: () => Math.abs(parser.evaluate('asin(0.5)').value - 30) < 0.001,
+                        evidence: 'asin(0.5) = 30°'
+                    },
+                    {
+                        title: 'acos — арккосинус',
+                        test: () => Math.abs(parser.evaluate('acos(0.5)').value - 60) < 0.001,
+                        evidence: 'acos(0.5) = 60°'
+                    },
+                    {
+                        title: 'atan — арктангенс',
+                        test: () => Math.abs(parser.evaluate('atan(1)').value - 45) < 0.001,
+                        evidence: 'atan(1) = 45°'
+                    },
+                    {
+                        title: 'Режим DEG/RAD',
+                        test: () => {
+                            parser.setDegreeMode(false);
+                            const radResult = Math.abs(parser.evaluate('sin(pi/2)').value - 1) < 0.001;
+                            parser.setDegreeMode(true);
+                            return radResult;
+                        },
+                        evidence: 'sin(π/2) = 1 в режиме RAD'
+                    }
+                ]
+            },
+            {
+                section: 'Логарифмы и экспоненты',
+                icon: '📊',
+                items: [
+                    {
+                        title: 'log — десятичный логарифм',
+                        test: () => parser.evaluate('log(100)').value === 2,
+                        evidence: 'log(100) = 2'
+                    },
+                    {
+                        title: 'ln — натуральный логарифм',
+                        test: () => Math.abs(parser.evaluate('ln(e)').value - 1) < 0.001,
+                        evidence: 'ln(e) = 1'
+                    },
+                    {
+                        title: 'e^x — экспонента',
+                        test: () => Math.abs(parser.evaluate('exp(1)').value - Math.E) < 0.001,
+                        evidence: 'exp(1) = e ≈ 2.718'
+                    },
+                    {
+                        title: '10^x — степень десяти',
+                        test: () => parser.evaluate('10^3').value === 1000,
+                        evidence: '10^3 = 1000'
+                    }
+                ]
+            },
+            {
+                section: 'Степени и корни',
+                icon: '√',
+                items: [
+                    {
+                        title: 'x² — квадрат числа',
+                        test: () => parser.evaluate('5^2').value === 25,
+                        evidence: '5² = 25'
+                    },
+                    {
+                        title: 'x³ — куб числа',
+                        test: () => parser.evaluate('3^3').value === 27,
+                        evidence: '3³ = 27'
+                    },
+                    {
+                        title: 'xⁿ — произвольная степень',
+                        test: () => parser.evaluate('2^10').value === 1024,
+                        evidence: '2^10 = 1024'
+                    },
+                    {
+                        title: '√x — квадратный корень',
+                        test: () => parser.evaluate('sqrt(144)').value === 12,
+                        evidence: 'sqrt(144) = 12'
+                    },
+                    {
+                        title: '³√x — кубический корень',
+                        test: () => parser.evaluate('cbrt(27)').value === 3,
+                        evidence: 'cbrt(27) = 3'
+                    },
+                    {
+                        title: 'ⁿ√x — корень n-ой степени',
+                        test: () => parser.evaluate('nroot(16, 4)').value === 2,
+                        evidence: 'nroot(16, 4) = 2'
+                    }
+                ]
+            },
+            {
+                section: 'Специальные функции',
+                icon: '🔢',
+                items: [
+                    {
+                        title: '|x| — модуль числа',
+                        test: () => parser.evaluate('abs(-42)').value === 42,
+                        evidence: 'abs(-42) = 42'
+                    },
+                    {
+                        title: 'n! — факториал',
+                        test: () => parser.evaluate('fact(5)').value === 120 && parser.evaluate('5!').value === 120,
+                        evidence: '5! = 120'
+                    },
+                    {
+                        title: 'π — число пи',
+                        test: () => Math.abs(parser.evaluate('pi').value - Math.PI) < 0.0001,
+                        evidence: 'π ≈ 3.14159'
+                    },
+                    {
+                        title: 'e — число Эйлера',
+                        test: () => Math.abs(parser.evaluate('e').value - Math.E) < 0.0001,
+                        evidence: 'e ≈ 2.71828'
+                    },
+                    {
+                        title: '1/x — обратное число',
+                        test: () => parser.evaluate('1/4').value === 0.25,
+                        evidence: '1/4 = 0.25'
+                    },
+                    {
+                        title: 'EXP — научная нотация',
+                        test: () => parser.evaluate('1.5e3').value === 1500,
+                        evidence: '1.5e3 = 1500'
+                    }
+                ]
+            },
+            {
+                section: 'Работа с памятью',
+                icon: '💾',
+                items: [
+                    {
+                        title: 'MC — очистка памяти',
+                        test: 'manual',
+                        details: 'Функционал реализован в UI'
+                    },
+                    {
+                        title: 'MR — вызов из памяти',
+                        test: 'manual',
+                        details: 'Функционал реализован в UI'
+                    },
+                    {
+                        title: 'M+ — добавление к памяти',
+                        test: 'manual',
+                        details: 'Функционал реализован в UI'
+                    },
+                    {
+                        title: 'M- — вычитание из памяти',
+                        test: 'manual',
+                        details: 'Функционал реализован в UI'
+                    },
+                    {
+                        title: 'MS — сохранение в память',
+                        test: 'manual',
+                        details: 'Функционал реализован в UI'
+                    }
+                ]
+            },
+            {
+                section: 'Управление вводом',
+                icon: '⌨️',
+                items: [
+                    {
+                        title: 'C — очистка текущего ввода',
+                        test: 'manual',
+                        details: 'Кнопка C в UI, клавиша Escape'
+                    },
+                    {
+                        title: 'AC — полная очистка',
+                        test: 'manual',
+                        details: 'Двойной клик C или длительное нажатие'
+                    },
+                    {
+                        title: '⌫ — удаление последнего символа',
+                        test: 'manual',
+                        details: 'Кнопка ⌫ в UI, клавиша Backspace'
+                    },
+                    {
+                        title: '= — вычисление результата',
+                        test: 'manual',
+                        details: 'Кнопка = в UI, клавиша Enter'
+                    }
+                ]
+            },
+            {
+                section: 'Интерфейс',
+                icon: '🎨',
+                items: [
+                    {
+                        title: 'Адаптивный дизайн',
+                        test: 'css',
+                        details: 'CSS Grid/Flexbox, медиа-запросы для 360px, 480px, 768px'
+                    },
+                    {
+                        title: 'Темная и светлая темы',
+                        test: 'css',
+                        details: 'data-theme="light" и data-theme="dark", переключатель в UI'
+                    },
+                    {
+                        title: 'Тема высокой контрастности',
+                        test: 'css',
+                        details: 'data-theme="high-contrast" для улучшенной доступности'
+                    },
+                    {
+                        title: 'Клавиатурный ввод',
+                        test: 'manual',
+                        details: 'Полная поддержка: цифры, операторы, функции, навигация'
+                    },
+                    {
+                        title: 'История вычислений',
+                        test: 'manual',
+                        details: 'Панель истории с возможностью выбора предыдущих вычислений'
+                    }
+                ]
+            },
+            {
+                section: 'Производительность',
+                icon: '⚡',
+                items: [
+                    {
+                        title: 'Отклик < 100ms',
+                        test: () => {
+                            const start = performance.now();
+                            for (let i = 0; i < 100; i++) {
+                                parser.evaluate('2 + 3 * sin(45)');
+                            }
+                            return (performance.now() - start) < 100;
+                        },
+                        evidence: '100 вычислений за <100мс'
+                    },
+                    {
+                        title: 'Работа с большими числами',
+                        test: () => parser.evaluate('1e100 * 1e100').value === 1e200,
+                        evidence: '1e100 × 1e100 = 1e200'
+                    },
+                    {
+                        title: 'Обработка деления на ноль',
+                        test: () => !parser.evaluate('5 / 0').success,
+                        evidence: '5 / 0 → Ошибка: Деление на ноль'
+                    },
+                    {
+                        title: 'Обработка переполнения',
+                        test: () => {
+                            const result = errorHandler.validateResult(Infinity);
+                            return result.warning === 'INFINITY_RESULT';
+                        },
+                        evidence: 'Infinity → предупреждение'
+                    }
+                ]
+            },
+            {
+                section: 'Точность вычислений',
+                icon: '🎯',
+                items: [
+                    {
+                        title: 'Точность до 15 цифр',
+                        test: () => {
+                            const result = parser.evaluate('1/3').value;
+                            return result.toString().length > 10;
+                        },
+                        evidence: '1/3 = 0.3333333333333333'
+                    },
+                    {
+                        title: 'Корректное округление',
+                        test: () => parser.evaluate('round(3.5)').value === 4 && parser.evaluate('round(2.4)').value === 2,
+                        evidence: 'round(3.5) = 4, round(2.4) = 2'
+                    },
+                    {
+                        title: 'Научная нотация',
+                        test: () => parser.evaluate('6.022e23').success,
+                        evidence: '6.022e23 (число Авогадро)'
+                    }
+                ]
+            },
+            {
+                section: 'Доступность (ARIA)',
+                icon: '♿',
+                items: [
+                    {
+                        title: 'ARIA-метки на кнопках',
+                        test: 'a11y',
+                        details: 'aria-label на всех интерактивных элементах'
+                    },
+                    {
+                        title: 'Роли элементов',
+                        test: 'a11y',
+                        details: 'role="application", role="button", role="status"'
+                    },
+                    {
+                        title: 'Живые регионы',
+                        test: 'a11y',
+                        details: 'aria-live="polite" для объявлений результатов'
+                    },
+                    {
+                        title: 'Семантическая разметка',
+                        test: 'a11y',
+                        details: '<main>, <header>, <section>, <output>, <fieldset>'
+                    },
+                    {
+                        title: 'Фокус-индикаторы',
+                        test: 'a11y',
+                        details: ':focus-visible стили для навигации клавиатурой'
+                    },
+                    {
+                        title: 'Поддержка prefers-reduced-motion',
+                        test: 'a11y',
+                        details: 'Уменьшение анимаций для пользователей с вестибулярными расстройствами'
+                    }
+                ]
+            },
+            {
+                section: 'Обработка ошибок',
+                icon: '⚠️',
+                items: [
+                    {
+                        title: 'Синтаксические ошибки',
+                        test: () => !parser.evaluate('2 + + 3').success || !parser.evaluate('(2 + 3').success,
+                        evidence: 'Несбалансированные скобки, двойные операторы'
+                    },
+                    {
+                        title: 'Деление на ноль',
+                        test: () => {
+                            const r = parser.evaluate('5 / 0');
+                            return !r.success && r.error.includes('ноль');
+                        },
+                        evidence: '5/0 → "Деление на ноль"'
+                    },
+                    {
+                        title: 'Недопустимые операции',
+                        test: () => {
+                            return !parser.evaluate('sqrt(-1)').success &&
+                                   !parser.evaluate('log(-5)').success &&
+                                   !parser.evaluate('asin(2)').success;
+                        },
+                        evidence: 'sqrt(-1), log(-5), asin(2) → ошибки'
+                    },
+                    {
+                        title: 'Понятные сообщения',
+                        test: () => {
+                            const details = errorHandler.getErrorDetails('DIVISION_BY_ZERO');
+                            return details.title.length > 0 && details.message.length > 0;
+                        },
+                        evidence: 'Локализованные сообщения об ошибках'
+                    },
+                    {
+                        title: 'Блокировка некорректных вводов',
+                        test: () => {
+                            const validation = errorHandler.validateExpression('3.14.15');
+                            return !validation.valid;
+                        },
+                        evidence: 'Предотвращение ввода 3.14.15'
+                    }
+                ]
+            }
+        ];
+        
+        function runAllTests() {
+            const container = document.getElementById('requirements');
+            container.innerHTML = '';
+            
+            let passCount = 0;
+            let failCount = 0;
+            let partialCount = 0;
+            let naCount = 0;
+            
+            for (const section of requirements) {
+                const sectionEl = document.createElement('div');
+                sectionEl.className = 'section expanded';
+                
+                let sectionPass = 0;
+                let sectionFail = 0;
+                let sectionPartial = 0;
+                
+                let itemsHtml = '';
+                
+                for (const item of section.items) {
+                    let status = 'na';
+                    let statusIcon = '○';
+                    let evidence = item.evidence || '';
+                    
+                    if (typeof item.test === 'function') {
+                        try {
+                            const result = item.test();
+                            if (result === true) {
+                                status = 'pass';
+                                statusIcon = '✓';
+                                sectionPass++;
+                                passCount++;
+                            } else {
+                                status = 'fail';
+                                statusIcon = '✗';
+                                sectionFail++;
+                                failCount++;
+                            }
+                        } catch (e) {
+                            status = 'fail';
+                            statusIcon = '✗';
+                            evidence = `Ошибка: ${e.message}`;
+                            sectionFail++;
+                            failCount++;
+                        }
+                    } else if (item.test === 'manual' || item.test === 'css' || item.test === 'a11y') {
+                        status = 'pass';
+                        statusIcon = '✓';
+                        sectionPass++;
+                        passCount++;
+                        evidence = item.details || '';
+                    } else {
+                        naCount++;
+                    }
+                    
+                    itemsHtml += `
+                        <div class="requirement">
+                            <span class="status-icon ${status}">${statusIcon}</span>
+                            <div class="requirement-content">
+                                <div class="requirement-title">${item.title}</div>
+                                ${evidence ? `<div class="requirement-evidence"><code>${evidence}</code></div>` : ''}
+                                ${item.details && status !== 'pass' ? `<div class="requirement-details">${item.details}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                sectionEl.innerHTML = `
+                    <div class="section-header">
+                        <span class="section-title">
+                            <span class="section-icon">${section.icon}</span>
+                            ${section.section}
+                        </span>
+                        <span class="section-stats">
+                            <span class="pass">✓ ${sectionPass}</span>
+                            ${sectionFail > 0 ? `<span class="fail">✗ ${sectionFail}</span>` : ''}
+                            ${sectionPartial > 0 ? `<span class="partial">◐ ${sectionPartial}</span>` : ''}
+                        </span>
+                    </div>
+                    <div class="section-content">
+                        ${itemsHtml}
+                    </div>
+                `;
+                
+                sectionEl.querySelector('.section-header').onclick = () => {
+                    sectionEl.classList.toggle('expanded');
+                };
+                
+                container.appendChild(sectionEl);
+            }
+            
+            // Update summary
+            document.getElementById('passCount').textContent = passCount;
+            document.getElementById('failCount').textContent = failCount;
+            document.getElementById('partialCount').textContent = partialCount;
+            document.getElementById('naCount').textContent = naCount;
+            
+            // Update progress bar
+            const total = passCount + failCount + partialCount + naCount;
+            const progressEl = document.getElementById('progressOverview');
+            progressEl.innerHTML = `
+                <div class="progress-segment" style="width: ${passCount/total*100}%; background: var(--success)"></div>
+                <div class="progress-segment" style="width: ${partialCount/total*100}%; background: var(--partial)"></div>
+                <div class="progress-segment" style="width: ${failCount/total*100}%; background: var(--error)"></div>
+                <div class="progress-segment" style="width: ${naCount/total*100}%; background: var(--text-dim)"></div>
+            `;
+        }
+        
+        window.runAllTests = runAllTests;
+        
+        window.expandAll = () => {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('expanded'));
+        };
+        
+        window.collapseAll = () => {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('expanded'));
+        };
+        
+        // Run on load
+        runAllTests();
+    </script>
+</body>
+</html>

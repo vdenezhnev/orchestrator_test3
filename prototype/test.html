@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpressionParser Tests</title>
+    <style>
+        :root {
+            --color-pass: #22c55e;
+            --color-fail: #ef4444;
+            --color-bg: #f8fafc;
+            --color-surface: #ffffff;
+            --color-text: #1e293b;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .summary {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .stat--total { background: #e2e8f0; }
+        .stat--pass { background: #dcfce7; color: var(--color-pass); }
+        .stat--fail { background: #fee2e2; color: var(--color-fail); }
+        
+        .tests {
+            background: var(--color-surface);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .test {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            gap: 0.75rem;
+        }
+        
+        .test:last-child { border-bottom: none; }
+        
+        .test__status {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.875rem;
+        }
+        
+        .test__status--pass {
+            background: #dcfce7;
+            color: var(--color-pass);
+        }
+        
+        .test__status--fail {
+            background: #fee2e2;
+            color: var(--color-fail);
+        }
+        
+        .test__name {
+            flex: 1;
+        }
+        
+        .test__error {
+            font-size: 0.875rem;
+            color: var(--color-fail);
+            margin-left: auto;
+            max-width: 40%;
+            text-align: right;
+        }
+        
+        .console {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #1e293b;
+            color: #94a3b8;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .console__line { margin-bottom: 0.25rem; }
+        .console__line--pass { color: var(--color-pass); }
+        .console__line--fail { color: var(--color-fail); }
+        
+        .interactive {
+            margin-top: 2rem;
+            background: var(--color-surface);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .interactive h2 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-family: monospace;
+        }
+        
+        .input-group button {
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .input-group button:hover {
+            background: #2563eb;
+        }
+        
+        .result {
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 0.375rem;
+            font-family: monospace;
+        }
+        
+        .result--error {
+            background: #fee2e2;
+            color: var(--color-fail);
+        }
+    </style>
+</head>
+<body>
+    <h1>ExpressionParser Tests</h1>
+    
+    <div class="summary" id="summary">
+        <div class="stat stat--total" id="totalStat">Running...</div>
+    </div>
+    
+    <div class="tests" id="tests"></div>
+    
+    <div class="console" id="console"></div>
+    
+    <div class="interactive">
+        <h2>Interactive Expression Evaluator</h2>
+        <div class="input-group">
+            <input type="text" id="exprInput" placeholder="Enter expression (e.g., 2 + 3 * sin(30))" value="sqrt(3^2 + 4^2)">
+            <button id="evalBtn">Evaluate</button>
+        </div>
+        <div class="result" id="result">Click "Evaluate" to calculate</div>
+        <div style="margin-top: 1rem; font-size: 0.875rem; color: #64748b;">
+            <strong>Supported:</strong> +, -, *, /, ^, (), sin, cos, tan, asin, acos, atan, log, ln, sqrt, cbrt, abs, exp, pow, fact, n!, pi, e, π
+        </div>
+    </div>
+
+    <script type="module">
+        import { ExpressionParser } from './js/ExpressionParser.js';
+        
+        const parser = new ExpressionParser({ isDegreeMode: true });
+        
+        class TestRunner {
+            constructor() {
+                this.passed = 0;
+                this.failed = 0;
+                this.results = [];
+            }
+            
+            test(name, fn) {
+                try {
+                    fn();
+                    this.passed++;
+                    this.results.push({ name, status: 'pass' });
+                    this.log(`✓ ${name}`, 'pass');
+                } catch (e) {
+                    this.failed++;
+                    this.results.push({ name, status: 'fail', error: e.message });
+                    this.log(`✗ ${name}: ${e.message}`, 'fail');
+                }
+            }
+            
+            log(message, type = '') {
+                const console = document.getElementById('console');
+                const line = document.createElement('div');
+                line.className = `console__line${type ? ` console__line--${type}` : ''}`;
+                line.textContent = message;
+                console.appendChild(line);
+            }
+            
+            assertEqual(actual, expected, message = '') {
+                if (actual !== expected) {
+                    throw new Error(`${message} Expected ${expected}, got ${actual}`);
+                }
+            }
+            
+            assertAlmostEqual(actual, expected, tolerance = 1e-10, message = '') {
+                if (Math.abs(actual - expected) > tolerance) {
+                    throw new Error(`${message} Expected ~${expected}, got ${actual}`);
+                }
+            }
+            
+            assertTrue(condition, message = '') {
+                if (!condition) {
+                    throw new Error(message || 'Expected true');
+                }
+            }
+            
+            render() {
+                const summary = document.getElementById('summary');
+                const tests = document.getElementById('tests');
+                
+                summary.innerHTML = `
+                    <div class="stat stat--total">Total: ${this.passed + this.failed}</div>
+                    <div class="stat stat--pass">Passed: ${this.passed}</div>
+                    <div class="stat stat--fail">Failed: ${this.failed}</div>
+                `;
+                
+                tests.innerHTML = this.results.map(r => `
+                    <div class="test">
+                        <div class="test__status test__status--${r.status}">${r.status === 'pass' ? '✓' : '✗'}</div>
+                        <div class="test__name">${r.name}</div>
+                        ${r.error ? `<div class="test__error">${r.error}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+        }
+        
+        const runner = new TestRunner();
+        
+        // Basic operations
+        runner.test('Addition: 2 + 3 = 5', () => {
+            const result = parser.evaluate('2 + 3');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 5);
+        });
+        
+        runner.test('Subtraction: 10 - 4 = 6', () => {
+            const result = parser.evaluate('10 - 4');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 6);
+        });
+        
+        runner.test('Multiplication: 6 * 7 = 42', () => {
+            const result = parser.evaluate('6 * 7');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 42);
+        });
+        
+        runner.test('Division: 20 / 4 = 5', () => {
+            const result = parser.evaluate('20 / 4');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 5);
+        });
+        
+        runner.test('Division by zero error', () => {
+            const result = parser.evaluate('5 / 0');
+            runner.assertTrue(!result.success);
+        });
+        
+        // Precedence
+        runner.test('Precedence: 2 + 3 * 4 = 14', () => {
+            const result = parser.evaluate('2 + 3 * 4');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 14);
+        });
+        
+        runner.test('Parentheses: (2 + 3) * 4 = 20', () => {
+            const result = parser.evaluate('(2 + 3) * 4');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 20);
+        });
+        
+        runner.test('Nested parentheses: ((2 + 3) * (4 - 1)) = 15', () => {
+            const result = parser.evaluate('((2 + 3) * (4 - 1))');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 15);
+        });
+        
+        // Unary
+        runner.test('Unary minus: -5 + 3 = -2', () => {
+            const result = parser.evaluate('-5 + 3');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, -2);
+        });
+        
+        // Power
+        runner.test('Power: 2 ^ 10 = 1024', () => {
+            const result = parser.evaluate('2 ^ 10');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 1024);
+        });
+        
+        runner.test('Power right assoc: 2 ^ 3 ^ 2 = 512', () => {
+            const result = parser.evaluate('2 ^ 3 ^ 2');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 512);
+        });
+        
+        // Constants
+        runner.test('Constant pi', () => {
+            const result = parser.evaluate('pi');
+            runner.assertTrue(result.success);
+            runner.assertAlmostEqual(result.value, Math.PI);
+        });
+        
+        runner.test('Constant e', () => {
+            const result = parser.evaluate('e');
+            runner.assertTrue(result.success);
+            runner.assertAlmostEqual(result.value, Math.E);
+        });
+        
+        // Trig functions
+        runner.test('sin(90) = 1', () => {
+            const result = parser.evaluate('sin(90)');
+            runner.assertTrue(result.success);
+            runner.assertAlmostEqual(result.value, 1);
+        });
+        
+        runner.test('cos(60) = 0.5', () => {
+            const result = parser.evaluate('cos(60)');
+            runner.assertTrue(result.success);
+            runner.assertAlmostEqual(result.value, 0.5);
+        });
+        
+        runner.test('tan(45) = 1', () => {
+            const result = parser.evaluate('tan(45)');
+            runner.assertTrue(result.success);
+            runner.assertAlmostEqual(result.value, 1);
+        });
+        
+        // Logarithms
+        runner.test('log(100) = 2', () => {
+            const result = parser.evaluate('log(100)');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 2);
+        });
+        
+        runner.test('ln(e) = 1', () => {
+            const result = parser.evaluate('ln(e)');
+            runner.assertTrue(result.success);
+            runner.assertAlmostEqual(result.value, 1);
+        });
+        
+        // Roots
+        runner.test('sqrt(16) = 4', () => {
+            const result = parser.evaluate('sqrt(16)');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 4);
+        });
+        
+        runner.test('cbrt(27) = 3', () => {
+            const result = parser.evaluate('cbrt(27)');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 3);
+        });
+        
+        // Factorial
+        runner.test('fact(5) = 120', () => {
+            const result = parser.evaluate('fact(5)');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 120);
+        });
+        
+        runner.test('5! = 120', () => {
+            const result = parser.evaluate('5!');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 120);
+        });
+        
+        // Complex
+        runner.test('sqrt(3^2 + 4^2) = 5', () => {
+            const result = parser.evaluate('sqrt(3^2 + 4^2)');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 5);
+        });
+        
+        runner.test('2 + 3 * sin(30) = 3.5', () => {
+            const result = parser.evaluate('2 + 3 * sin(30)');
+            runner.assertTrue(result.success);
+            runner.assertAlmostEqual(result.value, 3.5);
+        });
+        
+        runner.test('Implicit: 2pi ≈ 6.28', () => {
+            const result = parser.evaluate('2pi');
+            runner.assertTrue(result.success);
+            runner.assertAlmostEqual(result.value, 2 * Math.PI);
+        });
+        
+        runner.test('Scientific: 1.5e3 = 1500', () => {
+            const result = parser.evaluate('1.5e3');
+            runner.assertTrue(result.success);
+            runner.assertEqual(result.value, 1500);
+        });
+        
+        // Error cases
+        runner.test('Unbalanced parentheses error', () => {
+            const result = parser.evaluate('(2 + 3');
+            runner.assertTrue(!result.success);
+        });
+        
+        runner.test('Empty expression error', () => {
+            const result = parser.evaluate('');
+            runner.assertTrue(!result.success);
+        });
+        
+        runner.render();
+        
+        // Interactive evaluator
+        const exprInput = document.getElementById('exprInput');
+        const evalBtn = document.getElementById('evalBtn');
+        const resultDiv = document.getElementById('result');
+        
+        function evaluate() {
+            const expr = exprInput.value;
+            const result = parser.evaluate(expr);
+            
+            if (result.success) {
+                resultDiv.className = 'result';
+                resultDiv.textContent = `${expr} = ${result.value}`;
+            } else {
+                resultDiv.className = 'result result--error';
+                resultDiv.textContent = `Error: ${result.error}`;
+            }
+        }
+        
+        evalBtn.addEventListener('click', evaluate);
+        exprInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') evaluate();
+        });
+    </script>
+</body>
+</html>

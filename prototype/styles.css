@@ -1,0 +1,1355 @@
+/* ========================================
+   Engineering Calculator - Semantic Styles
+   Using CSS Grid & Flexbox for Layout
+   ======================================== */
+
+/* ===== CSS Custom Properties ===== */
+:root {
+    /* Light Theme Colors */
+    --color-bg: #F5F5F7;
+    --color-surface: #FFFFFF;
+    --color-surface-elevated: #FFFFFF;
+    --color-text-primary: #1D1D1F;
+    --color-text-secondary: #86868B;
+    --color-border: #E5E5E7;
+    
+    /* Key Colors - Light */
+    --key-digit-bg: #E4E4E6;
+    --key-digit-text: #1D1D1F;
+    --key-digit-hover: #D8D8DA;
+    --key-digit-active: #CDCDCF;
+    
+    --key-function-bg: #A5A5A5;
+    --key-function-text: #1D1D1F;
+    --key-function-hover: #8E8E8E;
+    --key-function-active: #7A7A7A;
+    
+    --key-operator-bg: #FF9500;
+    --key-operator-text: #FFFFFF;
+    --key-operator-hover: #E08600;
+    --key-operator-active: #CC7A00;
+    
+    --key-scientific-bg: #505050;
+    --key-scientific-text: #FFFFFF;
+    --key-scientific-hover: #636366;
+    --key-scientific-active: #48484A;
+    
+    --key-memory-bg: #007AFF;
+    --key-memory-text: #FFFFFF;
+    --key-memory-hover: #0056B3;
+    --key-memory-active: #004494;
+    
+    --key-equals-bg: #FF9500;
+    --key-equals-text: #FFFFFF;
+    --key-equals-hover: #E08600;
+    --key-equals-active: #CC7A00;
+    
+    /* Display */
+    --display-bg: #FFFFFF;
+    --display-border: #E5E5E7;
+    --display-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+    
+    /* Spacing Scale */
+    --space-2xs: 2px;
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    
+    /* Border Radius */
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 50%;
+    
+    /* Typography */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    --font-mono: 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    
+    /* Transitions */
+    --duration-instant: 50ms;
+    --duration-fast: 100ms;
+    --duration-normal: 200ms;
+    --duration-slow: 300ms;
+    --duration-slower: 400ms;
+    
+    --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+    --shadow-key: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-key-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
+    
+    /* Grid */
+    --keypad-gap: 8px;
+    --keypad-columns: 4;
+}
+
+/* ===== Dark Theme ===== */
+[data-theme="dark"] {
+    --color-bg: #000000;
+    --color-surface: #1C1C1E;
+    --color-surface-elevated: #2C2C2E;
+    --color-text-primary: #F5F5F7;
+    --color-text-secondary: #98989D;
+    --color-border: #38383A;
+    
+    --key-digit-bg: #505050;
+    --key-digit-text: #FFFFFF;
+    --key-digit-hover: #636366;
+    --key-digit-active: #7C7C80;
+    
+    --key-function-bg: #636366;
+    --key-function-text: #FFFFFF;
+    --key-function-hover: #7C7C80;
+    --key-function-active: #8E8E93;
+    
+    --key-operator-bg: #FF9F0A;
+    --key-operator-hover: #FFB340;
+    --key-operator-active: #FFCC70;
+    
+    --key-scientific-bg: #3A3A3C;
+    --key-scientific-hover: #48484A;
+    --key-scientific-active: #545456;
+    
+    --key-memory-bg: #0A84FF;
+    --key-memory-hover: #409CFF;
+    --key-memory-active: #70B4FF;
+    
+    --key-equals-bg: #FF9F0A;
+    --key-equals-hover: #FFB340;
+    --key-equals-active: #FFCC70;
+    
+    --display-bg: #2C2C2E;
+    --display-border: #48484A;
+    --display-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+    --shadow-key: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-key-hover: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== High Contrast Theme ===== */
+[data-theme="high-contrast"] {
+    --color-bg: #000000;
+    --color-surface: #000000;
+    --color-surface-elevated: #1A1A1A;
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #CCCCCC;
+    --color-border: #FFFFFF;
+    
+    --key-digit-bg: #333333;
+    --key-digit-text: #FFFFFF;
+    --key-digit-hover: #4D4D4D;
+    --key-digit-active: #666666;
+    
+    --key-function-bg: #4D4D4D;
+    --key-function-text: #FFFFFF;
+    --key-function-hover: #666666;
+    --key-function-active: #808080;
+    
+    --key-operator-bg: #FF6600;
+    --key-operator-text: #000000;
+    --key-operator-hover: #FF8533;
+    --key-operator-active: #FFA366;
+    
+    --key-scientific-bg: #1A1A1A;
+    --key-scientific-text: #FFFFFF;
+    --key-scientific-hover: #333333;
+    --key-scientific-active: #4D4D4D;
+    
+    --key-memory-bg: #0066CC;
+    --key-memory-text: #FFFFFF;
+    --key-memory-hover: #0080FF;
+    --key-memory-active: #3399FF;
+    
+    --key-equals-bg: #00CC00;
+    --key-equals-text: #000000;
+    --key-equals-hover: #33FF33;
+    --key-equals-active: #66FF66;
+    
+    --display-bg: #1A1A1A;
+    --display-border: #FFFFFF;
+}
+
+/* ===== Reset & Base ===== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-md);
+    transition: 
+        background-color var(--duration-slow) var(--ease-out),
+        color var(--duration-slow) var(--ease-out);
+}
+
+/* Visually hidden but accessible */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ===== Calculator Container ===== */
+.calculator {
+    --calculator-width: min(100%, 420px);
+    
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto auto;
+    gap: var(--space-md);
+    
+    width: var(--calculator-width);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+    
+    transition: 
+        background-color var(--duration-slow) var(--ease-out),
+        box-shadow var(--duration-normal) var(--ease-out);
+}
+
+/* ===== Header ===== */
+.calculator__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.calculator__title {
+    flex: 1;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.02em;
+}
+
+.calculator__theme-toggle,
+.calculator__history-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-spring);
+}
+
+.calculator__theme-toggle:hover,
+.calculator__history-toggle:hover {
+    background-color: var(--key-digit-bg);
+    color: var(--color-text-primary);
+}
+
+.calculator__theme-toggle:active,
+.calculator__history-toggle:active {
+    transform: scale(0.92);
+}
+
+.calculator__theme-toggle:focus-visible,
+.calculator__history-toggle:focus-visible {
+    outline: 2px solid var(--key-operator-bg);
+    outline-offset: 2px;
+}
+
+/* Icon visibility based on theme */
+.icon {
+    flex-shrink: 0;
+}
+
+.icon--moon {
+    display: none;
+}
+
+[data-theme="dark"] .icon--sun,
+[data-theme="high-contrast"] .icon--sun {
+    display: none;
+}
+
+[data-theme="dark"] .icon--moon,
+[data-theme="high-contrast"] .icon--moon {
+    display: block;
+}
+
+/* ===== Display Section ===== */
+.display {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: var(--space-sm);
+    
+    min-height: 120px;
+    padding: var(--space-lg);
+    background-color: var(--display-bg);
+    border: 1px solid var(--display-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--display-shadow);
+    position: relative;
+    
+    transition: 
+        background-color var(--duration-slow) var(--ease-out),
+        border-color var(--duration-slow) var(--ease-out);
+}
+
+.display__expression {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    text-align: right;
+    word-break: break-all;
+    min-height: 1.5em;
+}
+
+.display__result {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: clamp(2rem, 8vw, 3rem);
+    font-weight: 300;
+    line-height: 1.1;
+    text-align: right;
+    word-break: break-all;
+    
+    transition: color var(--duration-fast) var(--ease-out);
+}
+
+.display__indicators {
+    position: absolute;
+    top: var(--space-sm);
+    left: var(--space-md);
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.indicator {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.indicator--memory {
+    background-color: var(--key-memory-bg);
+    color: var(--key-memory-text);
+    display: none;
+}
+
+.indicator--memory.active {
+    display: inline-flex;
+}
+
+.indicator--mode {
+    background-color: var(--key-scientific-bg);
+    color: var(--key-scientific-text);
+}
+
+.indicator--paren {
+    background-color: var(--key-operator-bg);
+    color: var(--key-operator-text);
+    font-family: var(--font-mono);
+}
+
+/* ===== Error States ===== */
+
+/* Error state */
+.display--error {
+    border-color: #FF3B30 !important;
+}
+
+.display--error .display__result {
+    color: #FF3B30;
+}
+
+.display--error .display__expression {
+    color: #FF3B30;
+    opacity: 0.8;
+}
+
+/* Warning state */
+.display--warning {
+    border-color: #FF9500 !important;
+}
+
+.display--warning .display__result {
+    color: #FF9500;
+}
+
+/* Blocked input state */
+.display--blocked {
+    animation: blocked-pulse 0.2s ease-out;
+}
+
+@keyframes blocked-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.01); border-color: #FF3B30; }
+    100% { transform: scale(1); }
+}
+
+.input-blocked .key {
+    pointer-events: none;
+}
+
+.input-blocked .key--digit,
+.input-blocked .key--function {
+    opacity: 0.6;
+}
+
+/* Expression error icon */
+.expression--error {
+    font-size: 1.25rem !important;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+}
+
+/* Error indicator badge */
+.display--error::before,
+.display--warning::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: error-pulse 1s ease-in-out infinite;
+}
+
+.display--error::before {
+    background-color: #FF3B30;
+}
+
+.display--warning::before {
+    background-color: #FF9500;
+}
+
+@keyframes error-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Dark theme error colors */
+[data-theme="dark"] .display--error .display__result {
+    color: #FF453A;
+}
+
+[data-theme="dark"] .display--warning .display__result {
+    color: #FF9F0A;
+}
+
+[data-theme="dark"] .display--error::before {
+    background-color: #FF453A;
+}
+
+/* High contrast error colors */
+[data-theme="high-contrast"] .display--error {
+    border-color: #FF0000 !important;
+    border-width: 2px;
+}
+
+[data-theme="high-contrast"] .display--error .display__result {
+    color: #FF0000;
+}
+
+/* ===== Mode Selector (Unit Toggle) ===== */
+.mode-selector {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    border: none;
+    padding: 0;
+}
+
+.mode-selector__toggle {
+    display: flex;
+    background-color: var(--key-digit-bg);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2xs);
+    gap: var(--space-2xs);
+}
+
+.mode-selector__btn {
+    padding: var(--space-xs) var(--space-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    background-color: transparent;
+    border: none;
+    border-radius: calc(var(--radius-sm) - 2px);
+    cursor: pointer;
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.mode-selector__btn:hover {
+    color: var(--color-text-primary);
+}
+
+.mode-selector__btn--active,
+.mode-selector__btn[aria-checked="true"] {
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.mode-selector__btn:focus-visible {
+    outline: 2px solid var(--key-operator-bg);
+    outline-offset: 1px;
+}
+
+.mode-selector__second {
+    padding: var(--space-xs) var(--space-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--key-scientific-text);
+    background-color: var(--key-scientific-bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-spring);
+}
+
+.mode-selector__second:hover {
+    background-color: var(--key-scientific-hover);
+}
+
+.mode-selector__second:active {
+    transform: scale(0.95);
+}
+
+.mode-selector__second[aria-pressed="true"] {
+    background-color: var(--key-operator-bg);
+    color: var(--key-operator-text);
+}
+
+.mode-selector__second:focus-visible {
+    outline: 2px solid var(--key-operator-bg);
+    outline-offset: 2px;
+}
+
+/* ===== Keypad Sections ===== */
+.keypad {
+    display: grid;
+    gap: var(--keypad-gap);
+}
+
+/* Memory Keypad - 5 columns */
+.keypad--memory {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+/* Scientific Keypad - 6 columns */
+.keypad--scientific {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+/* Basic Keypad - 4 columns */
+.keypad--basic {
+    grid-template-columns: repeat(var(--keypad-columns), 1fr);
+}
+
+/* ===== Key (Button) Base Styles ===== */
+.key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    min-height: 44px;
+    padding: var(--space-sm);
+    
+    font-family: var(--font-sans);
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1;
+    
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    
+    box-shadow: var(--shadow-key);
+    
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        transform var(--duration-instant) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.key:focus-visible {
+    outline: 2px solid var(--key-operator-bg);
+    outline-offset: 2px;
+    z-index: 1;
+}
+
+/* Key hover/active states */
+.key:hover {
+    box-shadow: var(--shadow-key-hover);
+}
+
+.key:active {
+    transform: scale(0.94);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== Key Variants ===== */
+
+/* Digit Keys */
+.key--digit {
+    background-color: var(--key-digit-bg);
+    color: var(--key-digit-text);
+    aspect-ratio: 1;
+}
+
+.key--digit:hover {
+    background-color: var(--key-digit-hover);
+}
+
+.key--digit:active {
+    background-color: var(--key-digit-active);
+}
+
+/* Wide key (0) */
+.key--wide {
+    grid-column: span 2;
+    aspect-ratio: auto;
+}
+
+/* Function Keys (AC, +/-, %) */
+.key--function {
+    background-color: var(--key-function-bg);
+    color: var(--key-function-text);
+    aspect-ratio: 1;
+}
+
+.key--function:hover {
+    background-color: var(--key-function-hover);
+}
+
+.key--function:active {
+    background-color: var(--key-function-active);
+}
+
+/* Operator Keys (+, -, ×, ÷) */
+.key--operator {
+    background-color: var(--key-operator-bg);
+    color: var(--key-operator-text);
+    aspect-ratio: 1;
+}
+
+.key--operator:hover {
+    background-color: var(--key-operator-hover);
+}
+
+.key--operator:active {
+    background-color: var(--key-operator-active);
+}
+
+.key--operator.active {
+    background-color: var(--key-operator-text);
+    color: var(--key-operator-bg);
+}
+
+/* Equals Key */
+.key--equals {
+    background-color: var(--key-equals-bg);
+    color: var(--key-equals-text);
+    aspect-ratio: 1;
+}
+
+.key--equals:hover {
+    background-color: var(--key-equals-hover);
+}
+
+.key--equals:active {
+    background-color: var(--key-equals-active);
+}
+
+/* Scientific Keys */
+.key--scientific {
+    background-color: var(--key-scientific-bg);
+    color: var(--key-scientific-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    min-height: 40px;
+    padding: var(--space-xs);
+}
+
+.key--scientific:hover {
+    background-color: var(--key-scientific-hover);
+}
+
+.key--scientific:active {
+    background-color: var(--key-scientific-active);
+}
+
+.key--scientific sup {
+    font-size: 0.625rem;
+    vertical-align: super;
+    margin-left: 1px;
+}
+
+/* Memory Keys */
+.key--memory {
+    background-color: var(--key-memory-bg);
+    color: var(--key-memory-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-height: 36px;
+}
+
+.key--memory:hover {
+    background-color: var(--key-memory-hover);
+}
+
+.key--memory:active {
+    background-color: var(--key-memory-active);
+}
+
+/* ===== History Panel ===== */
+.history-panel {
+    position: absolute;
+    inset: 0;
+    
+    display: flex;
+    flex-direction: column;
+    
+    background-color: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-lg);
+    
+    transform: translateX(100%);
+    opacity: 0;
+    visibility: hidden;
+    
+    transition: 
+        transform var(--duration-slow) var(--ease-out),
+        opacity var(--duration-slow) var(--ease-out),
+        visibility var(--duration-slow);
+    
+    z-index: 10;
+}
+
+.history-panel.active,
+.history-panel[aria-hidden="false"] {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.history-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-md);
+    margin-bottom: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.history-panel__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.history-panel__clear {
+    background: none;
+    border: none;
+    color: var(--key-memory-bg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-xs);
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.history-panel__clear:hover {
+    background-color: var(--key-digit-bg);
+}
+
+.history-panel__clear:focus-visible {
+    outline: 2px solid var(--key-memory-bg);
+    outline-offset: 2px;
+}
+
+.history-panel__list {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.history-panel__empty {
+    color: var(--color-text-secondary);
+    text-align: center;
+    padding: var(--space-xl);
+}
+
+.history-panel__item {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.history-panel__item:hover {
+    background-color: var(--key-digit-bg);
+}
+
+.history-panel__item:focus-visible {
+    outline: 2px solid var(--key-operator-bg);
+    outline-offset: -2px;
+}
+
+.history-panel__expression {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.history-panel__result {
+    font-size: 1.125rem;
+    font-weight: 500;
+    font-family: var(--font-mono);
+}
+
+/* ===== Responsive Design ===== */
+
+/* Tablet & Desktop */
+@media (min-width: 481px) {
+    .calculator {
+        padding: var(--space-xl);
+    }
+    
+    .key--digit,
+    .key--function,
+    .key--operator,
+    .key--equals {
+        min-height: 64px;
+    }
+    
+    .key--scientific {
+        min-height: 48px;
+    }
+    
+    .key--memory {
+        min-height: 40px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    body {
+        padding: var(--space-sm);
+        align-items: flex-start;
+        padding-top: var(--space-lg);
+    }
+    
+    .calculator {
+        border-radius: var(--radius-lg);
+        padding: var(--space-md);
+        gap: var(--space-sm);
+    }
+    
+    .display {
+        min-height: 100px;
+        padding: var(--space-md);
+    }
+    
+    .display__result {
+        font-size: clamp(1.75rem, 10vw, 2.5rem);
+    }
+    
+    /* Hide scientific functions by default on mobile */
+    .keypad--scientific {
+        display: none;
+    }
+    
+    .calculator.show-scientific .keypad--scientific {
+        display: grid;
+    }
+    
+    .key {
+        font-size: 1.125rem;
+    }
+    
+    .key--scientific {
+        font-size: 0.6875rem;
+    }
+    
+    .keypad--memory {
+        gap: var(--space-xs);
+    }
+    
+    .key--memory {
+        font-size: 0.6875rem;
+        min-height: 32px;
+        padding: var(--space-xs);
+    }
+}
+
+/* Extra small mobile */
+@media (max-width: 360px) {
+    .calculator__title {
+        display: none;
+    }
+    
+    .display__result {
+        font-size: 1.5rem;
+    }
+    
+    .key {
+        font-size: 1rem;
+        min-height: 48px;
+    }
+    
+    .key--wide {
+        min-height: 48px;
+    }
+}
+
+/* Large screens */
+@media (min-width: 768px) {
+    .calculator {
+        --calculator-width: 440px;
+    }
+}
+
+/* ===== Accessibility & Motion ===== */
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+    :root {
+        --key-digit-bg: #333333;
+        --key-digit-text: #FFFFFF;
+        --display-border: #000000;
+    }
+    
+    .key {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Focus visible for keyboard navigation */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Print styles */
+@media print {
+    .calculator {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .calculator__theme-toggle,
+    .calculator__history-toggle,
+    .history-panel {
+        display: none;
+    }
+}
+
+/* ===== Additional UI Controller Styles ===== */
+
+/* Key pressed state */
+.key.pressed {
+    transform: scale(0.92);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Key focused state (keyboard navigation) */
+.key.focused {
+    box-shadow: 0 0 0 3px var(--key-operator-bg);
+}
+
+/* Shake animation for errors */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.display.shake {
+    animation: shake 0.3s ease-in-out;
+}
+
+/* Feedback toast */
+.feedback-toast {
+    position: absolute;
+    bottom: var(--space-lg);
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background-color: var(--key-scientific-bg);
+    color: var(--key-scientific-text);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.feedback-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Ripple effect */
+.key {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Result value transition */
+.display__result {
+    transition: 
+        opacity 0.1s ease-out,
+        font-size 0.2s ease-out,
+        color 0.15s ease-out;
+}
+
+/* Expression fade in */
+.display__expression {
+    transition: opacity 0.15s ease-out;
+}
+
+/* Active operator glow effect */
+.key--operator.active {
+    box-shadow: 
+        var(--shadow-key),
+        0 0 12px rgba(255, 149, 0, 0.4);
+}
+
+[data-theme="dark"] .key--operator.active,
+[data-theme="high-contrast"] .key--operator.active {
+    box-shadow: 
+        var(--shadow-key),
+        0 0 16px rgba(255, 159, 10, 0.5);
+}
+
+/* Memory indicator pulse */
+.indicator--memory.active {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* History item hover effect */
+.history-panel__item {
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-out);
+}
+
+.history-panel__item:hover {
+    transform: translateX(4px);
+}
+
+.history-panel__item:active {
+    transform: translateX(2px);
+}
+
+/* Long press indicator for backspace */
+.key[data-action="backspace"]::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background-color: var(--key-function-text);
+    border-radius: 1px;
+    transition: width 0.5s ease-out;
+}
+
+.key[data-action="backspace"]:active::after {
+    width: 60%;
+}
+
+/* Scientific panel slide animation on mobile */
+@media (max-width: 480px) {
+    .keypad--scientific {
+        max-height: 0;
+        overflow: hidden;
+        margin: 0;
+        opacity: 0;
+        transition: 
+            max-height 0.3s ease-out,
+            opacity 0.2s ease-out,
+            margin 0.3s ease-out;
+    }
+    
+    .calculator.show-scientific .keypad--scientific {
+        max-height: 200px;
+        opacity: 1;
+        margin-bottom: var(--space-md);
+    }
+}
+
+/* Smooth number change effect */
+.display__result.changing {
+    animation: number-change 0.15s ease-out;
+}
+
+@keyframes number-change {
+    0% { transform: translateY(-2px); opacity: 0.5; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== DEG/RAD Mode Styles ===== */
+
+/* RAD mode indicator styling */
+.indicator--rad {
+    background-color: #10b981 !important;
+}
+
+[data-theme="dark"] .indicator--rad {
+    background-color: #34d399 !important;
+}
+
+/* Mode toggle animation */
+.mode-selector__btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.mode-selector__btn--active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background-color: var(--key-operator-bg);
+    border-radius: 1px;
+}
+
+/* Trig function keys in RAD mode */
+.key--rad-mode {
+    position: relative;
+}
+
+.key--rad-mode::before {
+    content: 'rad';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.5rem;
+    font-weight: 600;
+    color: #10b981;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .key--rad-mode::before {
+    color: #34d399;
+}
+
+/* Expression function feedback */
+.expression--function {
+    color: var(--key-operator-bg) !important;
+    font-weight: 500;
+}
+
+/* Scientific function key hover tooltip */
+.key--scientific {
+    position: relative;
+}
+
+.key--scientific[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background-color: var(--color-text-primary);
+    color: var(--color-bg);
+    font-size: 0.625rem;
+    white-space: nowrap;
+    border-radius: var(--radius-xs);
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    animation: tooltip-fade-in 0.2s ease-out 0.5s forwards;
+}
+
+@keyframes tooltip-fade-in {
+    to {
+        opacity: 1;
+    }
+}
+
+/* Highlight scientific functions on hover */
+.key--scientific:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-key-hover), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Active trig function visual feedback */
+.key--scientific.calculating {
+    animation: pulse-function 0.3s ease-out;
+}
+
+@keyframes pulse-function {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color: var(--key-operator-bg); }
+    100% { transform: scale(1); }
+}
+
+/* Error flash for function keys */
+.key--scientific.error-flash {
+    animation: error-flash 0.3s ease-out;
+}
+
+@keyframes error-flash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color: #FF3B30; }
+    100% { transform: scale(1); }
+}
+
+/* Mode switch transition */
+.mode-selector__toggle {
+    transition: background-color var(--duration-normal) var(--ease-out);
+}
+
+.mode-selector__btn {
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-spring);
+}
+
+.mode-selector__btn:active {
+    transform: scale(0.95);
+}
+
+/* Keyboard shortcut hints */
+.key--scientific[data-shortcut]::after {
+    content: attr(data-shortcut);
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 0.5rem;
+    opacity: 0;
+    color: var(--color-text-secondary);
+    transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.calculator:focus-within .key--scientific[data-shortcut]::after {
+    opacity: 0.5;
+}
+
+/* Function result highlight */
+.display__result.function-result {
+    color: var(--key-operator-bg);
+    transition: color var(--duration-normal) var(--ease-out);
+}
+
+/* Scientific keypad section header (mobile) */
+@media (max-width: 480px) {
+    .keypad--scientific::before {
+        content: 'Scientific';
+        display: block;
+        grid-column: 1 / -1;
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--color-text-secondary);
+        padding-bottom: var(--space-xs);
+        text-align: center;
+    }
+}

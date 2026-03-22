@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Инженерный калькулятор с научными функциями">
+    <meta name="theme-color" content="#FF9500">
+    <title>Инженерный калькулятор</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="calculator" id="calculator" role="application" aria-label="Инженерный калькулятор">
+        <!-- Header -->
+        <header class="calculator__header">
+            <button 
+                class="calculator__theme-toggle" 
+                id="themeToggle" 
+                type="button"
+                aria-label="Переключить тему"
+                aria-pressed="false"
+            >
+                <svg class="icon icon--sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                <svg class="icon icon--moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+            
+            <h1 class="calculator__title">Engineering Calculator</h1>
+            
+            <button 
+                class="calculator__history-toggle" 
+                id="historyToggle" 
+                type="button"
+                aria-label="Открыть историю вычислений"
+                aria-expanded="false"
+                aria-controls="historyPanel"
+            >
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M12 8v4l3 3"/>
+                    <circle cx="12" cy="12" r="10"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Display Section -->
+        <section class="display" aria-label="Экран калькулятора" aria-live="polite">
+            <output class="display__expression" id="expression" aria-label="Текущее выражение">0</output>
+            <output class="display__result" id="result" aria-label="Результат">0</output>
+            <div class="display__indicators" aria-label="Индикаторы состояния">
+                <span class="indicator indicator--memory" id="memoryIndicator" aria-label="Память активна" role="status">M</span>
+                <span class="indicator indicator--mode" id="modeIndicator" aria-label="Режим угловых единиц" role="status">DEG</span>
+            </div>
+        </section>
+
+        <!-- Unit Mode Selector -->
+        <fieldset class="mode-selector" aria-label="Переключатель единиц измерения">
+            <legend class="visually-hidden">Режим угловых единиц</legend>
+            <div class="mode-selector__toggle" role="radiogroup" aria-label="Выбор единиц">
+                <button 
+                    class="mode-selector__btn mode-selector__btn--active" 
+                    type="button"
+                    role="radio"
+                    aria-checked="true"
+                    data-mode="deg"
+                >DEG</button>
+                <button 
+                    class="mode-selector__btn" 
+                    type="button"
+                    role="radio"
+                    aria-checked="false"
+                    data-mode="rad"
+                >RAD</button>
+            </div>
+            <button 
+                class="mode-selector__second" 
+                id="secondBtn" 
+                type="button"
+                aria-pressed="false"
+                aria-label="Включить альтернативные функции"
+            >2nd</button>
+        </fieldset>
+
+        <!-- Memory Keys -->
+        <section class="keypad keypad--memory" aria-label="Клавиши памяти">
+            <button class="key key--memory" type="button" data-action="mc" aria-label="Очистить память">MC</button>
+            <button class="key key--memory" type="button" data-action="mr" aria-label="Вызвать из памяти">MR</button>
+            <button class="key key--memory" type="button" data-action="m-plus" aria-label="Добавить к памяти">M+</button>
+            <button class="key key--memory" type="button" data-action="m-minus" aria-label="Вычесть из памяти">M−</button>
+            <button class="key key--memory" type="button" data-action="ms" aria-label="Сохранить в память">MS</button>
+        </section>
+
+        <!-- Scientific Functions Keys -->
+        <section class="keypad keypad--scientific" aria-label="Научные функции">
+            <!-- Row 1: Trigonometry -->
+            <button class="key key--scientific key--trig" type="button" data-action="sin" data-shortcut="s" aria-label="Синус" title="sin (градусы)">sin</button>
+            <button class="key key--scientific key--trig" type="button" data-action="cos" data-shortcut="c" aria-label="Косинус" title="cos (градусы)">cos</button>
+            <button class="key key--scientific key--trig" type="button" data-action="tan" data-shortcut="t" aria-label="Тангенс" title="tan (градусы)">tan</button>
+            <button class="key key--scientific" type="button" data-action="log" data-shortcut="l" aria-label="Десятичный логарифм" title="log₁₀">log</button>
+            <button class="key key--scientific" type="button" data-action="ln" data-shortcut="n" aria-label="Натуральный логарифм" title="ln (logₑ)">ln</button>
+            <button class="key key--scientific" type="button" data-action="pi" data-shortcut="p" aria-label="Число пи" title="π = 3.14159...">π</button>
+
+            <!-- Row 2: Inverse Trigonometry -->
+            <button class="key key--scientific key--trig" type="button" data-action="asin" aria-label="Арксинус" title="asin (результат в градусах)">asin</button>
+            <button class="key key--scientific key--trig" type="button" data-action="acos" aria-label="Арккосинус" title="acos (результат в градусах)">acos</button>
+            <button class="key key--scientific key--trig" type="button" data-action="atan" aria-label="Арктангенс" title="atan (результат в градусах)">atan</button>
+            <button class="key key--scientific" type="button" data-action="10x" aria-label="10 в степени x" title="10 в степени x">10<sup>x</sup></button>
+            <button class="key key--scientific" type="button" data-action="ex" aria-label="e в степени x" title="e в степени x">e<sup>x</sup></button>
+            <button class="key key--scientific" type="button" data-action="e" data-shortcut="e" aria-label="Число e" title="e = 2.71828...">e</button>
+
+            <!-- Row 3: Powers & Roots -->
+            <button class="key key--scientific" type="button" data-action="x2" aria-label="Квадрат" title="x²">x<sup>2</sup></button>
+            <button class="key key--scientific" type="button" data-action="x3" aria-label="Куб" title="x³">x<sup>3</sup></button>
+            <button class="key key--scientific" type="button" data-action="xn" data-shortcut="^" aria-label="Степень n" title="xⁿ">x<sup>n</sup></button>
+            <button class="key key--scientific" type="button" data-action="sqrt" data-shortcut="r" aria-label="Квадратный корень" title="√x">√x</button>
+            <button class="key key--scientific" type="button" data-action="cbrt" aria-label="Кубический корень" title="∛x">∛x</button>
+            <button class="key key--scientific" type="button" data-action="nroot" aria-label="Корень степени n" title="ⁿ√x">ⁿ√x</button>
+
+            <!-- Row 4: Special Functions -->
+            <button class="key key--scientific" type="button" data-action="abs" aria-label="Модуль числа" title="|x|">|x|</button>
+            <button class="key key--scientific" type="button" data-action="factorial" data-shortcut="!" aria-label="Факториал" title="n!">n!</button>
+            <button class="key key--scientific" type="button" data-action="inverse" aria-label="Обратное число" title="1/x">1/x</button>
+            <button class="key key--scientific" type="button" data-action="exp" aria-label="Экспоненциальная запись" title="Научная нотация">EXP</button>
+            <button class="key key--scientific" type="button" data-action="lparen" data-shortcut="(" aria-label="Открывающая скобка">(</button>
+            <button class="key key--scientific" type="button" data-action="rparen" data-shortcut=")" aria-label="Закрывающая скобка">)</button>
+        </section>
+
+        <!-- Basic Keypad -->
+        <section class="keypad keypad--basic" aria-label="Основная клавиатура">
+            <!-- Row 1: Functions -->
+            <button class="key key--function" type="button" data-action="clear" aria-label="Очистить всё">AC</button>
+            <button class="key key--function" type="button" data-action="negate" aria-label="Сменить знак">+/−</button>
+            <button class="key key--function" type="button" data-action="percent" aria-label="Процент">%</button>
+            <button class="key key--operator" type="button" data-action="divide" aria-label="Разделить">÷</button>
+
+            <!-- Row 2: 7-8-9 -->
+            <button class="key key--digit" type="button" data-digit="7">7</button>
+            <button class="key key--digit" type="button" data-digit="8">8</button>
+            <button class="key key--digit" type="button" data-digit="9">9</button>
+            <button class="key key--operator" type="button" data-action="multiply" aria-label="Умножить">×</button>
+
+            <!-- Row 3: 4-5-6 -->
+            <button class="key key--digit" type="button" data-digit="4">4</button>
+            <button class="key key--digit" type="button" data-digit="5">5</button>
+            <button class="key key--digit" type="button" data-digit="6">6</button>
+            <button class="key key--operator" type="button" data-action="subtract" aria-label="Вычесть">−</button>
+
+            <!-- Row 4: 1-2-3 -->
+            <button class="key key--digit" type="button" data-digit="1">1</button>
+            <button class="key key--digit" type="button" data-digit="2">2</button>
+            <button class="key key--digit" type="button" data-digit="3">3</button>
+            <button class="key key--operator" type="button" data-action="add" aria-label="Сложить">+</button>
+
+            <!-- Row 5: 0 and equals -->
+            <button class="key key--digit key--wide" type="button" data-digit="0">0</button>
+            <button class="key key--digit" type="button" data-action="decimal" aria-label="Десятичная точка">.</button>
+            <button class="key key--equals" type="button" data-action="equals" aria-label="Равно">=</button>
+        </section>
+
+        <!-- History Panel -->
+        <aside 
+            class="history-panel" 
+            id="historyPanel" 
+            aria-label="Панель истории вычислений"
+            aria-hidden="true"
+        >
+            <header class="history-panel__header">
+                <h2 class="history-panel__title">История</h2>
+                <button 
+                    class="history-panel__clear" 
+                    id="historyClear" 
+                    type="button"
+                    aria-label="Очистить историю"
+                >Очистить</button>
+            </header>
+            <ul class="history-panel__list" id="historyList" role="list">
+                <li class="history-panel__empty">История пуста</li>
+            </ul>
+        </aside>
+    </main>
+
+    <!-- Screen reader announcer -->
+    <div id="sr-announcer" role="status" aria-live="polite" aria-atomic="true" class="visually-hidden"></div>
+    
+    <!-- Load modular scripts or fallback to legacy -->
+    <script type="module" src="js/Calculator.js"></script>
+    <script nomodule src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator - Performance Benchmarks</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --accent: #58a6ff;
+            --success: #3fb950;
+            --warning: #d29922;
+            --danger: #f85149;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            border-color: var(--accent);
+            background: rgba(88, 166, 255, 0.1);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .benchmark-group {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        
+        .group-header {
+            background: rgba(88, 166, 255, 0.1);
+            padding: 1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .benchmark {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr 100px 100px 120px;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .benchmark-name {
+            font-size: 0.9rem;
+        }
+        
+        .benchmark-ops {
+            text-align: right;
+            font-family: monospace;
+        }
+        
+        .benchmark-time {
+            text-align: right;
+            font-family: monospace;
+            color: var(--accent);
+        }
+        
+        .benchmark-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .benchmark-bar-fill {
+            height: 100%;
+            background: var(--success);
+            transition: width 0.3s;
+        }
+        
+        .benchmark-bar-fill.warn { background: var(--warning); }
+        .benchmark-bar-fill.danger { background: var(--danger); }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .summary-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .summary-label {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .chart-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 4px;
+            padding: 1rem 0;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: var(--accent);
+            min-width: 10px;
+            max-width: 30px;
+            border-radius: 2px 2px 0 0;
+            position: relative;
+        }
+        
+        .chart-bar:hover::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        
+        .thresholds {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .thresholds h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .threshold-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .threshold-row:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚡ Calculator Performance Benchmarks</h1>
+    
+    <div class="controls">
+        <button id="runAll">Run All Benchmarks</button>
+        <button id="runParser">Parser Only</button>
+        <button id="runMemory">Memory Tests</button>
+    </div>
+    
+    <div class="summary" id="summary" style="display: none;">
+        <div class="summary-card">
+            <div class="summary-value" id="totalOps">-</div>
+            <div class="summary-label">Total Operations/sec</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="avgTime">-</div>
+            <div class="summary-label">Avg Time per Op (ms)</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="totalTime">-</div>
+            <div class="summary-label">Total Benchmark Time</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="memoryUsed">-</div>
+            <div class="summary-label">Memory Used (MB)</div>
+        </div>
+    </div>
+    
+    <div id="status" class="status"></div>
+    <div id="results"></div>
+    
+    <div class="chart-container" id="chartContainer" style="display: none;">
+        <div class="chart-title">Operations per Second by Category</div>
+        <div class="chart" id="chart"></div>
+    </div>
+    
+    <div class="thresholds">
+        <h3>Performance Thresholds</h3>
+        <div class="threshold-row">
+            <span>Simple arithmetic (2+3)</span>
+            <span style="color: var(--success)">≥ 500,000 ops/sec</span>
+        </div>
+        <div class="threshold-row">
+            <span>Complex expressions</span>
+            <span style="color: var(--success)">≥ 100,000 ops/sec</span>
+        </div>
+        <div class="threshold-row">
+            <span>Trigonometric functions</span>
+            <span style="color: var(--success)">≥ 50,000 ops/sec</span>
+        </div>
+        <div class="threshold-row">
+            <span>Nested parentheses (5 levels)</span>
+            <span style="color: var(--success)">≥ 50,000 ops/sec</span>
+        </div>
+        <div class="threshold-row">
+            <span>UI response time</span>
+            <span style="color: var(--success)">≤ 16ms (60fps)</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { ExpressionParser } from '../js/ExpressionParser.js';
+        import { ErrorHandler } from '../js/ErrorHandler.js';
+        
+        class Benchmark {
+            constructor(name, fn, options = {}) {
+                this.name = name;
+                this.fn = fn;
+                this.iterations = options.iterations || 10000;
+                this.warmupIterations = options.warmup || 100;
+            }
+            
+            async run() {
+                // Warmup
+                for (let i = 0; i < this.warmupIterations; i++) {
+                    this.fn();
+                }
+                
+                // Actual benchmark
+                const times = [];
+                const start = performance.now();
+                
+                for (let i = 0; i < this.iterations; i++) {
+                    const iterStart = performance.now();
+                    this.fn();
+                    times.push(performance.now() - iterStart);
+                }
+                
+                const totalTime = performance.now() - start;
+                const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
+                const opsPerSec = Math.round(1000 / avgTime);
+                
+                return {
+                    name: this.name,
+                    iterations: this.iterations,
+                    totalTime: totalTime.toFixed(2),
+                    avgTime: avgTime.toFixed(4),
+                    opsPerSec,
+                    times
+                };
+            }
+        }
+        
+        class BenchmarkSuite {
+            constructor() {
+                this.parser = new ExpressionParser({ isDegreeMode: true });
+                this.errorHandler = new ErrorHandler();
+                this.groups = [];
+            }
+            
+            createGroup(name) {
+                return { name, benchmarks: [], results: [] };
+            }
+            
+            async runGroup(group, onProgress) {
+                group.results = [];
+                for (let i = 0; i < group.benchmarks.length; i++) {
+                    const benchmark = group.benchmarks[i];
+                    if (onProgress) {
+                        onProgress(benchmark.name, i, group.benchmarks.length);
+                    }
+                    const result = await benchmark.run();
+                    group.results.push(result);
+                    // Small delay to prevent UI freeze
+                    await new Promise(r => setTimeout(r, 10));
+                }
+                return group;
+            }
+            
+            async runAll(onProgress) {
+                const results = [];
+                for (const group of this.groups) {
+                    results.push(await this.runGroup(group, onProgress));
+                }
+                return results;
+            }
+            
+            setupBenchmarks() {
+                const p = this.parser;
+                const eh = this.errorHandler;
+                
+                // Basic Arithmetic
+                const arithmetic = this.createGroup('Basic Arithmetic');
+                arithmetic.benchmarks.push(new Benchmark('Addition (2 + 3)', () => p.evaluate('2 + 3')));
+                arithmetic.benchmarks.push(new Benchmark('Subtraction (100 - 37)', () => p.evaluate('100 - 37')));
+                arithmetic.benchmarks.push(new Benchmark('Multiplication (12 * 34)', () => p.evaluate('12 * 34')));
+                arithmetic.benchmarks.push(new Benchmark('Division (144 / 12)', () => p.evaluate('144 / 12')));
+                arithmetic.benchmarks.push(new Benchmark('Power (2 ^ 10)', () => p.evaluate('2 ^ 10')));
+                arithmetic.benchmarks.push(new Benchmark('Modulo (17 % 5)', () => p.evaluate('17 % 5')));
+                this.groups.push(arithmetic);
+                
+                // Complex Expressions
+                const complex = this.createGroup('Complex Expressions');
+                complex.benchmarks.push(new Benchmark('Operator precedence (2 + 3 * 4 - 5)', () => p.evaluate('2 + 3 * 4 - 5')));
+                complex.benchmarks.push(new Benchmark('Parentheses ((2 + 3) * (4 - 1))', () => p.evaluate('(2 + 3) * (4 - 1)')));
+                complex.benchmarks.push(new Benchmark('Nested (((1+2)*3)+4)*5', () => p.evaluate('(((1+2)*3)+4)*5')));
+                complex.benchmarks.push(new Benchmark('Deep nesting 5 levels', () => p.evaluate('((((1+2)+3)+4)+5)')));
+                complex.benchmarks.push(new Benchmark('Unary operators (-5 + --3)', () => p.evaluate('-5 + --3')));
+                complex.benchmarks.push(new Benchmark('Mixed (2^3 + 4*5 - 6/2)', () => p.evaluate('2^3 + 4*5 - 6/2')));
+                this.groups.push(complex);
+                
+                // Trigonometric Functions
+                const trig = this.createGroup('Trigonometric Functions');
+                trig.benchmarks.push(new Benchmark('sin(45)', () => p.evaluate('sin(45)')));
+                trig.benchmarks.push(new Benchmark('cos(60)', () => p.evaluate('cos(60)')));
+                trig.benchmarks.push(new Benchmark('tan(30)', () => p.evaluate('tan(30)')));
+                trig.benchmarks.push(new Benchmark('asin(0.5)', () => p.evaluate('asin(0.5)')));
+                trig.benchmarks.push(new Benchmark('Pythagorean identity', () => p.evaluate('sin(30)^2 + cos(30)^2')));
+                trig.benchmarks.push(new Benchmark('sinh(1)', () => p.evaluate('sinh(1)')));
+                this.groups.push(trig);
+                
+                // Logarithms and Powers
+                const logPow = this.createGroup('Logarithms & Powers');
+                logPow.benchmarks.push(new Benchmark('log(100)', () => p.evaluate('log(100)')));
+                logPow.benchmarks.push(new Benchmark('ln(e)', () => p.evaluate('ln(e)')));
+                logPow.benchmarks.push(new Benchmark('log2(1024)', () => p.evaluate('log2(1024)')));
+                logPow.benchmarks.push(new Benchmark('sqrt(144)', () => p.evaluate('sqrt(144)')));
+                logPow.benchmarks.push(new Benchmark('cbrt(27)', () => p.evaluate('cbrt(27)')));
+                logPow.benchmarks.push(new Benchmark('exp(2)', () => p.evaluate('exp(2)')));
+                this.groups.push(logPow);
+                
+                // Special Functions
+                const special = this.createGroup('Special Functions');
+                special.benchmarks.push(new Benchmark('fact(10)', () => p.evaluate('fact(10)')));
+                special.benchmarks.push(new Benchmark('5!', () => p.evaluate('5!')));
+                special.benchmarks.push(new Benchmark('abs(-42)', () => p.evaluate('abs(-42)')));
+                special.benchmarks.push(new Benchmark('floor(3.7)', () => p.evaluate('floor(3.7)')));
+                special.benchmarks.push(new Benchmark('gcd(48, 18)', () => p.evaluate('gcd(48, 18)')));
+                special.benchmarks.push(new Benchmark('max(3, 7)', () => p.evaluate('max(3, 7)')));
+                this.groups.push(special);
+                
+                // Constants & Implicit Multiplication
+                const constants = this.createGroup('Constants & Implicit Mult');
+                constants.benchmarks.push(new Benchmark('pi', () => p.evaluate('pi')));
+                constants.benchmarks.push(new Benchmark('e', () => p.evaluate('e')));
+                constants.benchmarks.push(new Benchmark('2pi', () => p.evaluate('2pi')));
+                constants.benchmarks.push(new Benchmark('2(3+4)', () => p.evaluate('2(3+4)')));
+                constants.benchmarks.push(new Benchmark('(2)(3)(4)', () => p.evaluate('(2)(3)(4)')));
+                this.groups.push(constants);
+                
+                // Scientific Notation
+                const scientific = this.createGroup('Scientific Notation');
+                scientific.benchmarks.push(new Benchmark('1.5e3', () => p.evaluate('1.5e3')));
+                scientific.benchmarks.push(new Benchmark('2e-5', () => p.evaluate('2e-5')));
+                scientific.benchmarks.push(new Benchmark('6.022e23 * 2', () => p.evaluate('6.022e23 * 2')));
+                this.groups.push(scientific);
+                
+                // Error Handler Validation
+                const validation = this.createGroup('Input Validation');
+                validation.benchmarks.push(new Benchmark('Validate expression (balanced)', () => eh.validateExpression('(2 + 3) * 4')));
+                validation.benchmarks.push(new Benchmark('Validate expression (complex)', () => eh.validateExpression('sin(30) + cos(45) * 2')));
+                validation.benchmarks.push(new Benchmark('Validate result (number)', () => eh.validateResult(42.5)));
+                validation.benchmarks.push(new Benchmark('Get error details', () => eh.getErrorDetails('DIVISION_BY_ZERO')));
+                validation.benchmarks.push(new Benchmark('Format error', () => eh.formatError('SQRT_NEGATIVE')));
+                this.groups.push(validation);
+                
+                // Tokenization
+                const tokenization = this.createGroup('Tokenization');
+                tokenization.benchmarks.push(new Benchmark('Tokenize simple (2+3)', () => p.tokenize('2+3')));
+                tokenization.benchmarks.push(new Benchmark('Tokenize complex', () => p.tokenize('sin(30)+cos(45)*2^3')));
+                tokenization.benchmarks.push(new Benchmark('Tokenize long expression', () => p.tokenize('1+2+3+4+5+6+7+8+9+10')));
+                this.groups.push(tokenization);
+                
+                // Real-world Scenarios
+                const realWorld = this.createGroup('Real-world Scenarios');
+                realWorld.benchmarks.push(new Benchmark('Quadratic formula', () => p.evaluate('(-3 + sqrt(9 - 4*1*2))/(2*1)')));
+                realWorld.benchmarks.push(new Benchmark('Distance formula', () => p.evaluate('sqrt((5-2)^2 + (7-3)^2)')));
+                realWorld.benchmarks.push(new Benchmark('Compound interest', () => p.evaluate('1000 * (1 + 0.05)^10')));
+                realWorld.benchmarks.push(new Benchmark('Circle area (pi*r^2)', () => p.evaluate('pi * 5^2')));
+                realWorld.benchmarks.push(new Benchmark('Sphere volume', () => p.evaluate('(4/3) * pi * 3^3')));
+                this.groups.push(realWorld);
+            }
+        }
+        
+        // UI Functions
+        function updateStatus(message, showSpinner = false) {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = showSpinner 
+                ? `<span class="spinner"></span>${message}`
+                : message;
+        }
+        
+        function renderResults(groups) {
+            const container = document.getElementById('results');
+            container.innerHTML = '';
+            
+            let maxOps = 0;
+            for (const group of groups) {
+                for (const result of group.results) {
+                    maxOps = Math.max(maxOps, result.opsPerSec);
+                }
+            }
+            
+            for (const group of groups) {
+                const groupEl = document.createElement('div');
+                groupEl.className = 'benchmark-group';
+                
+                const avgOps = Math.round(
+                    group.results.reduce((s, r) => s + r.opsPerSec, 0) / group.results.length
+                );
+                
+                groupEl.innerHTML = `
+                    <div class="group-header">
+                        <span>${group.name}</span>
+                        <span>${avgOps.toLocaleString()} avg ops/sec</span>
+                    </div>
+                `;
+                
+                for (const result of group.results) {
+                    const percent = (result.opsPerSec / maxOps) * 100;
+                    const barClass = percent > 70 ? '' : percent > 40 ? 'warn' : 'danger';
+                    
+                    const benchEl = document.createElement('div');
+                    benchEl.className = 'benchmark';
+                    benchEl.innerHTML = `
+                        <span class="benchmark-name">${result.name}</span>
+                        <span class="benchmark-ops">${result.opsPerSec.toLocaleString()}</span>
+                        <span class="benchmark-time">${result.avgTime}ms</span>
+                        <div class="benchmark-bar">
+                            <div class="benchmark-bar-fill ${barClass}" style="width: ${percent}%"></div>
+                        </div>
+                    `;
+                    groupEl.appendChild(benchEl);
+                }
+                
+                container.appendChild(groupEl);
+            }
+        }
+        
+        function updateSummary(groups) {
+            let totalOps = 0;
+            let totalTime = 0;
+            let count = 0;
+            
+            for (const group of groups) {
+                for (const result of group.results) {
+                    totalOps += result.opsPerSec;
+                    totalTime += parseFloat(result.totalTime);
+                    count++;
+                }
+            }
+            
+            document.getElementById('summary').style.display = 'grid';
+            document.getElementById('totalOps').textContent = Math.round(totalOps / count).toLocaleString();
+            document.getElementById('avgTime').textContent = (1000 / (totalOps / count)).toFixed(4);
+            document.getElementById('totalTime').textContent = (totalTime / 1000).toFixed(2) + 's';
+            
+            // Memory usage
+            if (performance.memory) {
+                const usedMB = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1);
+                document.getElementById('memoryUsed').textContent = usedMB;
+            } else {
+                document.getElementById('memoryUsed').textContent = 'N/A';
+            }
+        }
+        
+        function renderChart(groups) {
+            const chart = document.getElementById('chart');
+            const container = document.getElementById('chartContainer');
+            container.style.display = 'block';
+            chart.innerHTML = '';
+            
+            let maxOps = 0;
+            for (const group of groups) {
+                const avgOps = group.results.reduce((s, r) => s + r.opsPerSec, 0) / group.results.length;
+                maxOps = Math.max(maxOps, avgOps);
+            }
+            
+            for (const group of groups) {
+                const avgOps = group.results.reduce((s, r) => s + r.opsPerSec, 0) / group.results.length;
+                const height = (avgOps / maxOps) * 100;
+                
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.height = height + '%';
+                bar.setAttribute('data-label', `${group.name}: ${Math.round(avgOps).toLocaleString()} ops/s`);
+                chart.appendChild(bar);
+            }
+        }
+        
+        // Initialize
+        const suite = new BenchmarkSuite();
+        suite.setupBenchmarks();
+        
+        document.getElementById('runAll').onclick = async () => {
+            document.getElementById('runAll').disabled = true;
+            document.getElementById('results').innerHTML = '';
+            
+            updateStatus('Running benchmarks...', true);
+            
+            const results = await suite.runAll((name, i, total) => {
+                updateStatus(`Running: ${name} (${i + 1}/${total})`, true);
+            });
+            
+            updateStatus('');
+            renderResults(results);
+            updateSummary(results);
+            renderChart(results);
+            
+            document.getElementById('runAll').disabled = false;
+        };
+        
+        document.getElementById('runParser').onclick = async () => {
+            document.getElementById('runParser').disabled = true;
+            document.getElementById('results').innerHTML = '';
+            
+            const parserGroups = suite.groups.filter(g => 
+                !g.name.includes('Validation')
+            );
+            
+            updateStatus('Running parser benchmarks...', true);
+            
+            for (const group of parserGroups) {
+                await suite.runGroup(group, (name) => {
+                    updateStatus(`Running: ${name}`, true);
+                });
+            }
+            
+            updateStatus('');
+            renderResults(parserGroups);
+            updateSummary(parserGroups);
+            renderChart(parserGroups);
+            
+            document.getElementById('runParser').disabled = false;
+        };
+        
+        document.getElementById('runMemory').onclick = async () => {
+            updateStatus('Running memory tests...', true);
+            
+            const parser = new ExpressionParser({ isDegreeMode: true });
+            const iterations = 100000;
+            
+            const memBefore = performance.memory ? performance.memory.usedJSHeapSize : 0;
+            const start = performance.now();
+            
+            for (let i = 0; i < iterations; i++) {
+                parser.evaluate(`${i} + ${i * 2}`);
+            }
+            
+            const elapsed = performance.now() - start;
+            const memAfter = performance.memory ? performance.memory.usedJSHeapSize : 0;
+            const memUsed = (memAfter - memBefore) / 1024 / 1024;
+            
+            updateStatus(`
+                Memory Test Complete<br>
+                Iterations: ${iterations.toLocaleString()}<br>
+                Time: ${(elapsed / 1000).toFixed(2)}s<br>
+                Ops/sec: ${Math.round(iterations / (elapsed / 1000)).toLocaleString()}<br>
+                Memory delta: ${memUsed.toFixed(2)} MB
+            `);
+        };
+    </script>
+</body>
+</html>
