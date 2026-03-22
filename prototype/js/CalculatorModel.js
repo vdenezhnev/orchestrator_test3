@@ -1,13 +1,21 @@
 /**
  * CalculatorModel - Manages calculator state and business logic
  * Implements the Model part of MVC pattern
+ * 
+ * Supports two modes:
+ * 1. Simple mode - step-by-step calculation (default)
+ * 2. Expression mode - full infix expression parsing with Shunting-yard algorithm
  */
+
+import { ExpressionParser } from './ExpressionParser.js';
 
 class CalculatorModel {
     constructor() {
         this.reset();
         this.history = [];
         this.maxHistoryLength = 50;
+        this.expressionParser = new ExpressionParser({ isDegreeMode: true });
+        this.expressionMode = false;
     }
     
     /**
@@ -22,8 +30,19 @@ class CalculatorModel {
         this.hasMemory = false;
         this.isDegreeMode = true;
         this.isSecondMode = false;
-        this.expression = '';
+        this.expressionString = '';
         this.openParentheses = 0;
+        this.tokens = [];
+    }
+    
+    /**
+     * Enable/disable expression mode
+     */
+    setExpressionMode(enabled) {
+        this.expressionMode = enabled;
+        if (enabled) {
+            this.expressionString = this.currentValue === '0' ? '' : this.currentValue;
+        }
     }
     
     /**
@@ -35,7 +54,9 @@ class CalculatorModel {
             expression: this.getExpressionString(),
             hasMemory: this.hasMemory,
             angleMode: this.isDegreeMode ? 'DEG' : 'RAD',
-            isSecondMode: this.isSecondMode
+            isSecondMode: this.isSecondMode,
+            expressionMode: this.expressionMode,
+            openParentheses: this.openParentheses
         };
     }
     
@@ -43,10 +64,26 @@ class CalculatorModel {
      * Get expression string for display
      */
     getExpressionString() {
+        if (this.expressionMode) {
+            return this.expressionString;
+        }
         if (this.operator && this.previousValue) {
             return `${this.previousValue} ${this.operator}`;
         }
-        return this.expression || '';
+        return '';
+    }
+    
+    /**
+     * Get full expression including current value (for expression mode)
+     */
+    getFullExpression() {
+        if (this.expressionMode) {
+            return this.expressionString;
+        }
+        if (this.operator && this.previousValue) {
+            return `${this.previousValue} ${this.operator} ${this.currentValue}`;
+        }
+        return this.currentValue;
     }
     
     /**
@@ -68,6 +105,12 @@ class CalculatorModel {
      * Input a digit
      */
     inputDigit(digit) {
+        if (this.expressionMode) {
+            this.expressionString += digit;
+            this.currentValue = this.getLastNumber() || digit;
+            return { success: true, value: this.currentValue, expression: this.expressionString };
+        }
+        
         if (this.waitingForOperand) {
             this.currentValue = digit;
             this.waitingForOperand = false;
@@ -87,6 +130,15 @@ class CalculatorModel {
      * Input decimal point
      */
     inputDecimal() {
+        if (this.expressionMode) {
+            const lastNum = this.getLastNumber();
+            if (!lastNum || !lastNum.includes('.')) {
+                this.expressionString += lastNum ? '.' : '0.';
+                this.currentValue = this.getLastNumber() || '0.';
+            }
+            return { success: true, value: this.currentValue, expression: this.expressionString };
+        }
+        
         if (this.waitingForOperand) {
             this.currentValue = '0.';
             this.waitingForOperand = false;
@@ -100,6 +152,20 @@ class CalculatorModel {
      * Input an operator
      */
     inputOperator(operator) {
+        if (this.expressionMode) {
+            const normalized = this.normalizeOperator(operator);
+            if (this.expressionString.length > 0) {
+                const lastChar = this.expressionString.slice(-1);
+                if (['+', '-', '*', '/', '×', '÷', '^'].includes(lastChar)) {
+                    this.expressionString = this.expressionString.slice(0, -1) + normalized;
+                } else {
+                    this.expressionString += normalized;
+                }
+            }
+            this.waitingForOperand = true;
+            return { success: true, operator: operator, expression: this.expressionString };
+        }
+        
         const value = parseFloat(this.currentValue);
         
         if (this.operator && !this.waitingForOperand) {
@@ -117,9 +183,29 @@ class CalculatorModel {
     }
     
     /**
+     * Normalize operator symbol
+     */
+    normalizeOperator(op) {
+        const map = { '×': '*', '÷': '/', '−': '-' };
+        return map[op] || op;
+    }
+    
+    /**
+     * Get last number from expression string
+     */
+    getLastNumber() {
+        const match = this.expressionString.match(/[\d.]+$/);
+        return match ? match[0] : null;
+    }
+    
+    /**
      * Calculate result
      */
     calculate() {
+        if (this.expressionMode) {
+            return this.evaluateExpression();
+        }
+        
         if (!this.operator || this.waitingForOperand) {
             return { success: true, value: this.currentValue };
         }
@@ -144,8 +230,26 @@ class CalculatorModel {
                 }
                 result = prev / current;
                 break;
+            case '^':
+                result = Math.pow(prev, current);
+                break;
+            case 'nroot':
+                if (current === 0) {
+                    return { success: false, error: 'Корень степени 0' };
+                }
+                if (prev < 0 && current % 2 === 0) {
+                    return { success: false, error: 'Чётный корень отрицательного числа' };
+                }
+                result = prev < 0 ? -Math.pow(-prev, 1/current) : Math.pow(prev, 1/current);
+                break;
             default:
                 return { success: false, error: 'Неизвестный оператор' };
+        }
+        
+        if (!isFinite(result)) {
+            if (isNaN(result)) {
+                return { success: false, error: 'Результат не определён' };
+            }
         }
         
         const expression = `${this.previousValue} ${this.operator} ${this.currentValue}`;
@@ -157,9 +261,47 @@ class CalculatorModel {
         this.operator = null;
         this.previousValue = '';
         this.waitingForOperand = true;
-        this.expression = '';
         
         return { success: true, value: formattedResult, expression: expression };
+    }
+    
+    /**
+     * Evaluate full expression using ExpressionParser
+     */
+    evaluateExpression() {
+        if (!this.expressionString || this.expressionString.trim() === '') {
+            return { success: true, value: this.currentValue };
+        }
+        
+        this.expressionParser.setDegreeMode(this.isDegreeMode);
+        
+        const result = this.expressionParser.evaluate(this.expressionString);
+        
+        if (result.success) {
+            const formattedResult = this.formatNumber(result.value);
+            this.addToHistory(this.expressionString, formattedResult);
+            
+            this.currentValue = formattedResult;
+            this.expressionString = formattedResult;
+            this.openParentheses = 0;
+            this.waitingForOperand = true;
+            
+            return { 
+                success: true, 
+                value: formattedResult, 
+                expression: this.expressionString 
+            };
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Parse expression string (for validation or display)
+     */
+    parseExpression(expr) {
+        this.expressionParser.setDegreeMode(this.isDegreeMode);
+        return this.expressionParser.validate(expr || this.expressionString);
     }
     
     /**
@@ -305,14 +447,67 @@ class CalculatorModel {
      * Input parenthesis
      */
     inputParenthesis(paren) {
+        if (this.expressionMode) {
+            if (paren === '(') {
+                const lastChar = this.expressionString.slice(-1);
+                if (lastChar && /[\d\)]/.test(lastChar)) {
+                    this.expressionString += '*(';
+                } else {
+                    this.expressionString += '(';
+                }
+                this.openParentheses++;
+            } else if (paren === ')' && this.openParentheses > 0) {
+                this.expressionString += ')';
+                this.openParentheses--;
+            }
+            return { success: true, expression: this.expressionString };
+        }
+        
         if (paren === '(') {
-            this.expression += '(';
             this.openParentheses++;
         } else if (paren === ')' && this.openParentheses > 0) {
-            this.expression += ')';
             this.openParentheses--;
         }
         return { success: true };
+    }
+    
+    /**
+     * Input function name (for expression mode)
+     */
+    inputFunction(funcName) {
+        if (this.expressionMode) {
+            const lastChar = this.expressionString.slice(-1);
+            if (lastChar && /[\d\)]/.test(lastChar)) {
+                this.expressionString += '*' + funcName + '(';
+            } else {
+                this.expressionString += funcName + '(';
+            }
+            this.openParentheses++;
+            this.waitingForOperand = false;
+            return { success: true, expression: this.expressionString };
+        }
+        
+        return this.applyFunction(funcName);
+    }
+    
+    /**
+     * Input constant (for expression mode)
+     */
+    inputConstantExpr(constant) {
+        if (this.expressionMode) {
+            const lastChar = this.expressionString.slice(-1);
+            if (lastChar && /[\d\)]/.test(lastChar)) {
+                this.expressionString += '*' + constant;
+            } else {
+                this.expressionString += constant;
+            }
+            
+            const constants = { 'π': Math.PI, 'pi': Math.PI, 'e': Math.E };
+            this.currentValue = this.formatNumber(constants[constant] || 0);
+            return { success: true, expression: this.expressionString, value: this.currentValue };
+        }
+        
+        return this.insertConstant(constant);
     }
     
     /**
@@ -348,15 +543,48 @@ class CalculatorModel {
         this.previousValue = '';
         this.operator = null;
         this.waitingForOperand = false;
-        this.expression = '';
+        this.expressionString = '';
         this.openParentheses = 0;
         return { success: true };
+    }
+    
+    /**
+     * Clear entry (CE) - clear only current input
+     */
+    clearEntry() {
+        if (this.expressionMode) {
+            const match = this.expressionString.match(/(.*?)[\d.]+$/);
+            if (match) {
+                this.expressionString = match[1];
+            }
+            this.currentValue = '0';
+            return { success: true, expression: this.expressionString };
+        }
+        
+        this.currentValue = '0';
+        return { success: true, value: this.currentValue };
     }
     
     /**
      * Backspace - remove last character
      */
     backspace() {
+        if (this.expressionMode) {
+            if (this.expressionString.length > 0) {
+                const lastChar = this.expressionString.slice(-1);
+                this.expressionString = this.expressionString.slice(0, -1);
+                
+                if (lastChar === '(') {
+                    this.openParentheses--;
+                } else if (lastChar === ')') {
+                    this.openParentheses++;
+                }
+                
+                this.currentValue = this.getLastNumber() || '0';
+            }
+            return { success: true, value: this.currentValue, expression: this.expressionString };
+        }
+        
         if (this.waitingForOperand) {
             return { success: true, value: this.currentValue };
         }
@@ -413,6 +641,7 @@ class CalculatorModel {
      */
     setAngleMode(mode) {
         this.isDegreeMode = mode === 'deg';
+        this.expressionParser.setDegreeMode(this.isDegreeMode);
         return { success: true, mode: this.isDegreeMode ? 'DEG' : 'RAD' };
     }
     
@@ -513,7 +742,9 @@ class CalculatorModel {
             memory: this.memory,
             hasMemory: this.hasMemory,
             isDegreeMode: this.isDegreeMode,
-            history: this.history
+            history: this.history,
+            expressionMode: this.expressionMode,
+            expressionString: this.expressionString
         };
     }
     
@@ -530,6 +761,24 @@ class CalculatorModel {
         this.hasMemory = state.hasMemory || false;
         this.isDegreeMode = state.isDegreeMode !== false;
         this.history = state.history || [];
+        this.expressionMode = state.expressionMode || false;
+        this.expressionString = state.expressionString || '';
+        
+        this.expressionParser.setDegreeMode(this.isDegreeMode);
+    }
+    
+    /**
+     * Get supported functions list
+     */
+    getSupportedFunctions() {
+        return this.expressionParser.getSupportedFunctions();
+    }
+    
+    /**
+     * Get supported constants
+     */
+    getSupportedConstants() {
+        return this.expressionParser.getSupportedConstants();
     }
 }
 
