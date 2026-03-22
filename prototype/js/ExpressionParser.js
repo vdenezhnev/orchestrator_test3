@@ -309,17 +309,23 @@ class ExpressionParser {
             
             if (this.isDigit(char) || char === '.') {
                 let numStr = '';
-                while (i < expr.length && (this.isDigit(expr[i]) || expr[i] === '.' || expr[i].toLowerCase() === 'e')) {
-                    if (expr[i].toLowerCase() === 'e') {
+                while (i < expr.length && (this.isDigit(expr[i]) || expr[i] === '.')) {
+                    numStr += expr[i];
+                    i++;
+                }
+                if (i < expr.length && (expr[i] === 'e' || expr[i] === 'E')) {
+                    const nextChar = expr[i + 1];
+                    if (nextChar && (this.isDigit(nextChar) || nextChar === '+' || nextChar === '-')) {
                         numStr += expr[i];
                         i++;
-                        if (i < expr.length && (expr[i] === '+' || expr[i] === '-')) {
+                        if (expr[i] === '+' || expr[i] === '-') {
                             numStr += expr[i];
                             i++;
                         }
-                    } else {
-                        numStr += expr[i];
-                        i++;
+                        while (i < expr.length && this.isDigit(expr[i])) {
+                            numStr += expr[i];
+                            i++;
+                        }
                     }
                 }
                 tokens.push({ type: 'number', value: parseFloat(numStr) });
@@ -634,17 +640,43 @@ class ExpressionParser {
      * @returns {string} Normalized expression
      */
     normalizeExpression(expr) {
-        return expr
+        let result = expr
             .replace(/×/g, '*')
             .replace(/÷/g, '/')
             .replace(/−/g, '-')
             .replace(/\s+/g, '')
             .replace(/\)\(/g, ')*(')
-            .replace(/(\d)\(/g, '$1*(')
-            .replace(/\)(\d)/g, ')*$1')
-            .replace(/(\d)(π|pi|e|sin|cos|tan|log|ln|sqrt)/gi, '$1*$2')
-            .replace(/(π|pi|e)\(/g, '$1*(')
-            .replace(/\)(π|pi|e)/g, ')*$1');
+            .replace(/\)(\d)/g, ')*$1');
+        
+        result = result.replace(/([a-zA-Z][a-zA-Z0-9]*)\(/g, (match, funcName) => {
+            if (this.functions[funcName] || this.constants[funcName] !== undefined) {
+                return match;
+            }
+            return match;
+        });
+        
+        result = result.replace(/(\d)\(/g, (match, digit, offset) => {
+            const before = result.substring(0, offset);
+            if (/[a-zA-Z0-9]$/.test(before) && /[a-zA-Z]/.test(before.slice(-2, -1) || '')) {
+                return match;
+            }
+            return digit + '*(';
+        });
+        
+        result = result.replace(/(\d)(π|pi|sin|cos|tan|cot|sec|csc|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|ln|sqrt|cbrt|abs|floor|ceil|round|exp|fact|gcd|lcm|min|max|mod)/gi, '$1*$2');
+        
+        result = result.replace(/(\d)(log)(?![0-9a-z])/gi, '$1*$2');
+        
+        result = result.replace(/(\d)e(?![+-]?\d)/gi, '$1*e');
+        
+        result = result
+            .replace(/(π|pi)\(/g, '$1*(')
+            .replace(/\)(π|pi)/g, ')*$1');
+        
+        result = result.replace(/([^a-zA-Z])e\(/g, '$1e*(');
+        result = result.replace(/\)e([^+-]|$)/g, ')*e$1');
+        
+        return result;
     }
     
     /**

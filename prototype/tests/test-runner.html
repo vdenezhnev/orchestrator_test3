@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator Engine - Test Suite</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --text: #eaeaea;
+            --pass: #00d26a;
+            --fail: #ff4444;
+            --skip: #ffaa00;
+            --info: #4da8da;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            color: var(--info);
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--info);
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: var(--info);
+            color: var(--bg);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+        
+        .stat.passed .stat-value { color: var(--pass); }
+        .stat.failed .stat-value { color: var(--fail); }
+        .stat.skipped .stat-value { color: var(--skip); }
+        .stat.total .stat-value { color: var(--info); }
+        
+        .suite {
+            background: var(--surface);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        
+        .suite-header {
+            background: rgba(77, 168, 218, 0.1);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .suite-header:hover {
+            background: rgba(77, 168, 218, 0.2);
+        }
+        
+        .suite-name {
+            font-weight: bold;
+        }
+        
+        .suite-stats {
+            font-size: 0.85rem;
+        }
+        
+        .suite-stats span {
+            margin-left: 1rem;
+        }
+        
+        .suite-tests {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .suite.expanded .suite-tests {
+            max-height: 2000px;
+        }
+        
+        .test {
+            padding: 0.5rem 1rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .test.pass { border-left: 3px solid var(--pass); }
+        .test.fail { border-left: 3px solid var(--fail); }
+        .test.skip { border-left: 3px solid var(--skip); }
+        
+        .test-icon {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .test.pass .test-icon { color: var(--pass); }
+        .test.fail .test-icon { color: var(--fail); }
+        .test.skip .test-icon { color: var(--skip); }
+        
+        .test-name {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .test-time {
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+        
+        .test-error {
+            font-size: 0.8rem;
+            color: var(--fail);
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            background: rgba(255, 68, 68, 0.1);
+        }
+        
+        .progress-bar {
+            height: 4px;
+            background: var(--surface);
+            margin-bottom: 2rem;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--info);
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        .interactive {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .interactive h3 {
+            margin-bottom: 1rem;
+            color: var(--info);
+        }
+        
+        .interactive-input {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .interactive-input input {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text);
+            padding: 0.75rem;
+            font-family: inherit;
+            font-size: 1rem;
+            border-radius: 4px;
+        }
+        
+        .interactive-result {
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 4px;
+            font-size: 1.25rem;
+        }
+        
+        .interactive-result.success { color: var(--pass); }
+        .interactive-result.error { color: var(--fail); }
+        
+        .accessibility-results {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .accessibility-results h3 {
+            margin-bottom: 1rem;
+            color: var(--info);
+        }
+        
+        .a11y-check {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .a11y-check:last-child {
+            border-bottom: none;
+        }
+        
+        .a11y-check.pass { color: var(--pass); }
+        .a11y-check.fail { color: var(--fail); }
+        .a11y-check.warn { color: var(--skip); }
+    </style>
+</head>
+<body>
+    <h1>🧮 Calculator Engine - Test Suite</h1>
+    
+    <div class="test-controls">
+        <button id="runAll">Run All Tests</button>
+        <button id="runParser">Run Parser Tests</button>
+        <button id="runError">Run Error Handler Tests</button>
+        <button id="runA11y">Run Accessibility Tests</button>
+    </div>
+    
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+    </div>
+    
+    <div class="summary">
+        <div class="stat total">
+            <div class="stat-value" id="totalCount">0</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat passed">
+            <div class="stat-value" id="passedCount">0</div>
+            <div class="stat-label">Passed</div>
+        </div>
+        <div class="stat failed">
+            <div class="stat-value" id="failedCount">0</div>
+            <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat skipped">
+            <div class="stat-value" id="skippedCount">0</div>
+            <div class="stat-label">Skipped</div>
+        </div>
+    </div>
+    
+    <div id="results"></div>
+    
+    <div class="accessibility-results" id="a11yResults" style="display: none;">
+        <h3>Accessibility Checks</h3>
+        <div id="a11yChecks"></div>
+    </div>
+    
+    <div class="interactive">
+        <h3>Interactive Expression Tester</h3>
+        <div class="interactive-input">
+            <input type="text" id="exprInput" placeholder="Enter expression (e.g., 2 + 3 * sin(30))">
+            <button id="evalBtn">Evaluate</button>
+        </div>
+        <div class="interactive-result" id="exprResult">Enter an expression to evaluate</div>
+    </div>
+
+    <script type="module">
+        import { ExpressionParser } from '../js/ExpressionParser.js';
+        import { ErrorHandler } from '../js/ErrorHandler.js';
+        
+        class TestRunner {
+            constructor() {
+                this.parser = new ExpressionParser({ isDegreeMode: true });
+                this.errorHandler = new ErrorHandler();
+                this.results = {
+                    total: 0,
+                    passed: 0,
+                    failed: 0,
+                    skipped: 0
+                };
+                this.suites = [];
+            }
+            
+            createSuite(name) {
+                return {
+                    name,
+                    tests: [],
+                    passed: 0,
+                    failed: 0,
+                    skipped: 0
+                };
+            }
+            
+            async runTest(suite, name, fn) {
+                const startTime = performance.now();
+                try {
+                    await fn();
+                    const time = (performance.now() - startTime).toFixed(2);
+                    suite.tests.push({ name, status: 'pass', time });
+                    suite.passed++;
+                    this.results.passed++;
+                } catch (error) {
+                    const time = (performance.now() - startTime).toFixed(2);
+                    suite.tests.push({ name, status: 'fail', time, error: error.message });
+                    suite.failed++;
+                    this.results.failed++;
+                }
+                this.results.total++;
+                this.updateProgress();
+            }
+            
+            skip(suite, name) {
+                suite.tests.push({ name, status: 'skip' });
+                suite.skipped++;
+                this.results.skipped++;
+                this.results.total++;
+            }
+            
+            assert(condition, message) {
+                if (!condition) throw new Error(message || 'Assertion failed');
+            }
+            
+            assertEqual(actual, expected, message) {
+                if (actual !== expected) {
+                    throw new Error(`${message || ''} Expected: ${expected}, Got: ${actual}`);
+                }
+            }
+            
+            assertAlmostEqual(actual, expected, tolerance = 1e-10, message) {
+                if (Math.abs(actual - expected) > tolerance) {
+                    throw new Error(`${message || ''} Expected: ~${expected}, Got: ${actual}`);
+                }
+            }
+            
+            updateProgress() {
+                const percent = (this.results.total / this.totalTests * 100) || 0;
+                document.getElementById('progress').style.width = percent + '%';
+                document.getElementById('totalCount').textContent = this.results.total;
+                document.getElementById('passedCount').textContent = this.results.passed;
+                document.getElementById('failedCount').textContent = this.results.failed;
+                document.getElementById('skippedCount').textContent = this.results.skipped;
+            }
+            
+            renderResults() {
+                const container = document.getElementById('results');
+                container.innerHTML = '';
+                
+                for (const suite of this.suites) {
+                    const suiteEl = document.createElement('div');
+                    suiteEl.className = 'suite expanded';
+                    
+                    suiteEl.innerHTML = `
+                        <div class="suite-header">
+                            <span class="suite-name">${suite.name}</span>
+                            <span class="suite-stats">
+                                <span style="color: var(--pass)">✓ ${suite.passed}</span>
+                                <span style="color: var(--fail)">✗ ${suite.failed}</span>
+                                ${suite.skipped ? `<span style="color: var(--skip)">⊘ ${suite.skipped}</span>` : ''}
+                            </span>
+                        </div>
+                        <div class="suite-tests">
+                            ${suite.tests.map(t => `
+                                <div class="test ${t.status}">
+                                    <span class="test-icon">${t.status === 'pass' ? '✓' : t.status === 'fail' ? '✗' : '⊘'}</span>
+                                    <span class="test-name">${t.name}</span>
+                                    ${t.time ? `<span class="test-time">${t.time}ms</span>` : ''}
+                                </div>
+                                ${t.error ? `<div class="test-error">${t.error}</div>` : ''}
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                    suiteEl.querySelector('.suite-header').onclick = () => {
+                        suiteEl.classList.toggle('expanded');
+                    };
+                    
+                    container.appendChild(suiteEl);
+                }
+            }
+            
+            async runParserTests() {
+                const suite = this.createSuite('ExpressionParser');
+                const p = this.parser;
+                
+                // Basic Arithmetic
+                await this.runTest(suite, 'Addition: 2 + 3 = 5', () => {
+                    const r = p.evaluate('2 + 3');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 5);
+                });
+                
+                await this.runTest(suite, 'Subtraction: 10 - 7 = 3', () => {
+                    const r = p.evaluate('10 - 7');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 3);
+                });
+                
+                await this.runTest(suite, 'Multiplication: 6 × 8 = 48', () => {
+                    const r = p.evaluate('6 * 8');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 48);
+                });
+                
+                await this.runTest(suite, 'Division: 20 ÷ 4 = 5', () => {
+                    const r = p.evaluate('20 / 4');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 5);
+                });
+                
+                await this.runTest(suite, 'Modulo: 17 % 5 = 2', () => {
+                    const r = p.evaluate('17 % 5');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 2);
+                });
+                
+                // Precedence
+                await this.runTest(suite, 'Precedence: 2 + 3 * 4 = 14', () => {
+                    const r = p.evaluate('2 + 3 * 4');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 14);
+                });
+                
+                await this.runTest(suite, 'Precedence: 10 - 6 / 2 = 7', () => {
+                    const r = p.evaluate('10 - 6 / 2');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 7);
+                });
+                
+                await this.runTest(suite, 'Power precedence: 2 ^ 3 * 4 = 32', () => {
+                    const r = p.evaluate('2 ^ 3 * 4');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 32);
+                });
+                
+                await this.runTest(suite, 'Power right associativity: 2 ^ 3 ^ 2 = 512', () => {
+                    const r = p.evaluate('2 ^ 3 ^ 2');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 512);
+                });
+                
+                // Parentheses
+                await this.runTest(suite, 'Parentheses: (2 + 3) * 4 = 20', () => {
+                    const r = p.evaluate('(2 + 3) * 4');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 20);
+                });
+                
+                await this.runTest(suite, 'Nested parentheses: ((2 + 3) * (4 - 1)) = 15', () => {
+                    const r = p.evaluate('((2 + 3) * (4 - 1))');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 15);
+                });
+                
+                // Unary
+                await this.runTest(suite, 'Unary minus: -5 = -5', () => {
+                    const r = p.evaluate('-5');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, -5);
+                });
+                
+                await this.runTest(suite, 'Unary in expression: -5 + 3 = -2', () => {
+                    const r = p.evaluate('-5 + 3');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, -2);
+                });
+                
+                await this.runTest(suite, 'Unary after operator: 10 * -2 = -20', () => {
+                    const r = p.evaluate('10 * -2');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, -20);
+                });
+                
+                // Constants
+                await this.runTest(suite, 'Constant π ≈ 3.14159', () => {
+                    const r = p.evaluate('pi');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, Math.PI);
+                });
+                
+                await this.runTest(suite, 'Constant e ≈ 2.71828', () => {
+                    const r = p.evaluate('e');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, Math.E);
+                });
+                
+                // Trigonometric (Degrees)
+                await this.runTest(suite, 'sin(0°) = 0', () => {
+                    const r = p.evaluate('sin(0)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 0);
+                });
+                
+                await this.runTest(suite, 'sin(30°) = 0.5', () => {
+                    const r = p.evaluate('sin(30)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 0.5);
+                });
+                
+                await this.runTest(suite, 'sin(90°) = 1', () => {
+                    const r = p.evaluate('sin(90)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'cos(0°) = 1', () => {
+                    const r = p.evaluate('cos(0)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'cos(60°) = 0.5', () => {
+                    const r = p.evaluate('cos(60)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 0.5);
+                });
+                
+                await this.runTest(suite, 'tan(45°) = 1', () => {
+                    const r = p.evaluate('tan(45)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 1);
+                });
+                
+                // Inverse Trig
+                await this.runTest(suite, 'asin(0.5) = 30°', () => {
+                    const r = p.evaluate('asin(0.5)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 30);
+                });
+                
+                await this.runTest(suite, 'acos(0.5) = 60°', () => {
+                    const r = p.evaluate('acos(0.5)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 60);
+                });
+                
+                await this.runTest(suite, 'atan(1) = 45°', () => {
+                    const r = p.evaluate('atan(1)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 45);
+                });
+                
+                // Hyperbolic
+                await this.runTest(suite, 'sinh(0) = 0', () => {
+                    const r = p.evaluate('sinh(0)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 0);
+                });
+                
+                await this.runTest(suite, 'cosh(0) = 1', () => {
+                    const r = p.evaluate('cosh(0)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'tanh(0) = 0', () => {
+                    const r = p.evaluate('tanh(0)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 0);
+                });
+                
+                // Logarithms
+                await this.runTest(suite, 'log(10) = 1', () => {
+                    const r = p.evaluate('log(10)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'log(100) = 2', () => {
+                    const r = p.evaluate('log(100)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 2);
+                });
+                
+                await this.runTest(suite, 'ln(e) = 1', () => {
+                    const r = p.evaluate('ln(e)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'ln(1) = 0', () => {
+                    const r = p.evaluate('ln(1)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 0);
+                });
+                
+                await this.runTest(suite, 'log2(8) = 3', () => {
+                    const r = p.evaluate('log2(8)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 3);
+                });
+                
+                // Roots
+                await this.runTest(suite, 'sqrt(4) = 2', () => {
+                    const r = p.evaluate('sqrt(4)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 2);
+                });
+                
+                await this.runTest(suite, 'sqrt(2) ≈ 1.414', () => {
+                    const r = p.evaluate('sqrt(2)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, Math.SQRT2);
+                });
+                
+                await this.runTest(suite, 'cbrt(27) = 3', () => {
+                    const r = p.evaluate('cbrt(27)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 3);
+                });
+                
+                await this.runTest(suite, 'cbrt(-8) = -2', () => {
+                    const r = p.evaluate('cbrt(-8)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, -2);
+                });
+                
+                // Factorial
+                await this.runTest(suite, 'fact(0) = 1', () => {
+                    const r = p.evaluate('fact(0)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'fact(5) = 120', () => {
+                    const r = p.evaluate('fact(5)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 120);
+                });
+                
+                await this.runTest(suite, '5! = 120', () => {
+                    const r = p.evaluate('5!');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 120);
+                });
+                
+                await this.runTest(suite, 'fact(10) = 3628800', () => {
+                    const r = p.evaluate('fact(10)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 3628800);
+                });
+                
+                // Other Functions
+                await this.runTest(suite, 'abs(-42) = 42', () => {
+                    const r = p.evaluate('abs(-42)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 42);
+                });
+                
+                await this.runTest(suite, 'floor(3.7) = 3', () => {
+                    const r = p.evaluate('floor(3.7)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 3);
+                });
+                
+                await this.runTest(suite, 'ceil(3.2) = 4', () => {
+                    const r = p.evaluate('ceil(3.2)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 4);
+                });
+                
+                await this.runTest(suite, 'round(3.5) = 4', () => {
+                    const r = p.evaluate('round(3.5)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 4);
+                });
+                
+                await this.runTest(suite, 'max(3, 7) = 7', () => {
+                    const r = p.evaluate('max(3, 7)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 7);
+                });
+                
+                await this.runTest(suite, 'min(3, 7) = 3', () => {
+                    const r = p.evaluate('min(3, 7)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 3);
+                });
+                
+                await this.runTest(suite, 'gcd(12, 18) = 6', () => {
+                    const r = p.evaluate('gcd(12, 18)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 6);
+                });
+                
+                await this.runTest(suite, 'lcm(4, 6) = 12', () => {
+                    const r = p.evaluate('lcm(4, 6)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 12);
+                });
+                
+                await this.runTest(suite, 'exp(0) = 1', () => {
+                    const r = p.evaluate('exp(0)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'exp(1) = e', () => {
+                    const r = p.evaluate('exp(1)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, Math.E);
+                });
+                
+                // Complex Expressions
+                await this.runTest(suite, 'Complex: sqrt(3^2 + 4^2) = 5', () => {
+                    const r = p.evaluate('sqrt(3^2 + 4^2)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 5);
+                });
+                
+                await this.runTest(suite, 'Complex: 2 + 3 * sin(30) = 3.5', () => {
+                    const r = p.evaluate('2 + 3 * sin(30)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 3.5);
+                });
+                
+                await this.runTest(suite, 'Pythagorean identity: sin²(30) + cos²(30) = 1', () => {
+                    const r = p.evaluate('(sin(30))^2 + (cos(30))^2');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'Quadratic formula: (-3 + sqrt(9 - 4*2*1))/(2*2)', () => {
+                    const r = p.evaluate('(-3 + sqrt(9 - 4*2*1))/(2*2)');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, -0.5);
+                });
+                
+                // Implicit Multiplication
+                await this.runTest(suite, 'Implicit: 2pi ≈ 6.28', () => {
+                    const r = p.evaluate('2pi');
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 2 * Math.PI);
+                });
+                
+                await this.runTest(suite, 'Implicit: 2(3+4) = 14', () => {
+                    const r = p.evaluate('2(3+4)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 14);
+                });
+                
+                await this.runTest(suite, 'Implicit: (2)(3) = 6', () => {
+                    const r = p.evaluate('(2)(3)');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 6);
+                });
+                
+                // Scientific Notation
+                await this.runTest(suite, 'Scientific: 1.5e3 = 1500', () => {
+                    const r = p.evaluate('1.5e3');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 1500);
+                });
+                
+                await this.runTest(suite, 'Scientific: 2e-2 = 0.02', () => {
+                    const r = p.evaluate('2e-2');
+                    this.assert(r.success);
+                    this.assertEqual(r.value, 0.02);
+                });
+                
+                // Error Cases
+                await this.runTest(suite, 'Error: Division by zero', () => {
+                    const r = p.evaluate('5 / 0');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: sqrt(-1)', () => {
+                    const r = p.evaluate('sqrt(-1)');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: log(0)', () => {
+                    const r = p.evaluate('log(0)');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: log(-5)', () => {
+                    const r = p.evaluate('log(-5)');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: asin(2)', () => {
+                    const r = p.evaluate('asin(2)');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: acos(-2)', () => {
+                    const r = p.evaluate('acos(-2)');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: fact(-1)', () => {
+                    const r = p.evaluate('fact(-1)');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: fact(1.5)', () => {
+                    const r = p.evaluate('fact(1.5)');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: Unbalanced parentheses (open)', () => {
+                    const r = p.evaluate('(2 + 3');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: Unbalanced parentheses (close)', () => {
+                    const r = p.evaluate('2 + 3)');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: Empty expression', () => {
+                    const r = p.evaluate('');
+                    this.assert(!r.success);
+                });
+                
+                await this.runTest(suite, 'Error: Unknown function', () => {
+                    const r = p.evaluate('unknown(5)');
+                    this.assert(!r.success);
+                });
+                
+                // Radian Mode
+                await this.runTest(suite, 'Radian mode: sin(π/2) = 1', () => {
+                    p.setDegreeMode(false);
+                    const r = p.evaluate('sin(pi/2)');
+                    p.setDegreeMode(true);
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, 1);
+                });
+                
+                await this.runTest(suite, 'Radian mode: cos(π) = -1', () => {
+                    p.setDegreeMode(false);
+                    const r = p.evaluate('cos(pi)');
+                    p.setDegreeMode(true);
+                    this.assert(r.success);
+                    this.assertAlmostEqual(r.value, -1);
+                });
+                
+                this.suites.push(suite);
+            }
+            
+            async runErrorHandlerTests() {
+                const suite = this.createSuite('ErrorHandler');
+                const eh = this.errorHandler;
+                
+                await this.runTest(suite, 'Get error details: DIVISION_BY_ZERO', () => {
+                    const details = eh.getErrorDetails('DIVISION_BY_ZERO');
+                    this.assert(details.title.length > 0);
+                    this.assert(details.message.length > 0);
+                    this.assertEqual(details.severity, 'error');
+                });
+                
+                await this.runTest(suite, 'Get error details: unknown code returns generic', () => {
+                    const details = eh.getErrorDetails('UNKNOWN_CODE');
+                    this.assert(details.message.length > 0);
+                });
+                
+                await this.runTest(suite, 'Validate expression: balanced parentheses', () => {
+                    const result = eh.validateExpression('(2 + 3) * 4');
+                    this.assert(result.valid);
+                });
+                
+                await this.runTest(suite, 'Validate expression: unbalanced parentheses', () => {
+                    const result = eh.validateExpression('(2 + 3 * 4');
+                    this.assert(!result.valid);
+                    this.assert(result.errors.some(e => e.code === 'UNBALANCED_PARENTHESES'));
+                });
+                
+                await this.runTest(suite, 'Validate expression: multiple decimals', () => {
+                    const result = eh.validateExpression('3.14.15');
+                    this.assert(!result.valid);
+                    this.assert(result.errors.some(e => e.code === 'TOO_MANY_DECIMALS'));
+                });
+                
+                await this.runTest(suite, 'Validate result: normal number', () => {
+                    const result = eh.validateResult(42);
+                    this.assert(result.valid);
+                });
+                
+                await this.runTest(suite, 'Validate result: NaN', () => {
+                    const result = eh.validateResult(NaN);
+                    this.assert(!result.valid);
+                    this.assertEqual(result.error, 'NAN_RESULT');
+                });
+                
+                await this.runTest(suite, 'Validate result: Infinity', () => {
+                    const result = eh.validateResult(Infinity);
+                    this.assert(result.valid);
+                    this.assertEqual(result.warning, 'INFINITY_RESULT');
+                });
+                
+                await this.runTest(suite, 'Validate result: -Infinity', () => {
+                    const result = eh.validateResult(-Infinity);
+                    this.assert(result.valid);
+                    this.assertEqual(result.value, '-∞');
+                });
+                
+                await this.runTest(suite, 'Format error message', () => {
+                    const message = eh.formatError('DIVISION_BY_ZERO');
+                    this.assert(message.length > 0);
+                    this.assert(typeof message === 'string');
+                });
+                
+                await this.runTest(suite, 'Get severity: error', () => {
+                    const severity = eh.getSeverity('DIVISION_BY_ZERO');
+                    this.assertEqual(severity, 'error');
+                });
+                
+                await this.runTest(suite, 'Get severity: warning', () => {
+                    const severity = eh.getSeverity('MAX_DIGITS_REACHED');
+                    this.assertEqual(severity, 'warning');
+                });
+                
+                await this.runTest(suite, 'Map error: division by zero (Russian)', () => {
+                    const code = eh.mapRawErrorToCode('Деление на ноль');
+                    this.assertEqual(code, 'DIVISION_BY_ZERO');
+                });
+                
+                await this.runTest(suite, 'Map error: sqrt negative', () => {
+                    const code = eh.mapRawErrorToCode('Корень отрицательного числа');
+                    this.assertEqual(code, 'SQRT_NEGATIVE');
+                });
+                
+                await this.runTest(suite, 'Map error: parentheses', () => {
+                    const code = eh.mapRawErrorToCode('Несбалансированные скобки');
+                    this.assertEqual(code, 'UNBALANCED_PARENTHESES');
+                });
+                
+                await this.runTest(suite, 'Get all error codes', () => {
+                    const codes = eh.getErrorCodes();
+                    this.assert(Array.isArray(codes));
+                    this.assert(codes.length > 10);
+                    this.assert(codes.includes('DIVISION_BY_ZERO'));
+                });
+                
+                this.suites.push(suite);
+            }
+            
+            async runAccessibilityTests() {
+                const container = document.getElementById('a11yChecks');
+                container.innerHTML = '';
+                document.getElementById('a11yResults').style.display = 'block';
+                
+                const checks = [];
+                
+                // Load calculator HTML via fetch
+                try {
+                    const response = await fetch('../index.html');
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Check for ARIA labels on buttons
+                    const buttons = doc.querySelectorAll('button');
+                    const buttonsWithAria = Array.from(buttons).filter(b => 
+                        b.hasAttribute('aria-label') || b.hasAttribute('title') || b.textContent.trim()
+                    );
+                    checks.push({
+                        name: 'Buttons have accessible labels',
+                        pass: buttonsWithAria.length === buttons.length,
+                        details: `${buttonsWithAria.length}/${buttons.length} buttons`
+                    });
+                    
+                    // Check for semantic HTML
+                    const hasMain = doc.querySelector('main') !== null;
+                    checks.push({
+                        name: 'Uses <main> element',
+                        pass: hasMain
+                    });
+                    
+                    const hasHeader = doc.querySelector('header') !== null;
+                    checks.push({
+                        name: 'Uses <header> element',
+                        pass: hasHeader
+                    });
+                    
+                    // Check for role attributes
+                    const roleElements = doc.querySelectorAll('[role]');
+                    checks.push({
+                        name: 'Uses ARIA roles',
+                        pass: roleElements.length > 0,
+                        details: `${roleElements.length} elements with roles`
+                    });
+                    
+                    // Check for aria-live regions
+                    const liveRegions = doc.querySelectorAll('[aria-live]');
+                    checks.push({
+                        name: 'Has aria-live regions for announcements',
+                        pass: liveRegions.length > 0,
+                        details: `${liveRegions.length} live regions`
+                    });
+                    
+                    // Check output elements
+                    const outputs = doc.querySelectorAll('output');
+                    checks.push({
+                        name: 'Uses <output> elements for results',
+                        pass: outputs.length > 0,
+                        details: `${outputs.length} output elements`
+                    });
+                    
+                    // Check for fieldset/legend
+                    const fieldsets = doc.querySelectorAll('fieldset');
+                    checks.push({
+                        name: 'Uses <fieldset> for grouping',
+                        pass: fieldsets.length > 0,
+                        details: `${fieldsets.length} fieldsets`
+                    });
+                    
+                    // Check for data-shortcut attributes (keyboard hints)
+                    const shortcuts = doc.querySelectorAll('[data-shortcut]');
+                    checks.push({
+                        name: 'Has keyboard shortcut hints',
+                        pass: shortcuts.length > 0,
+                        details: `${shortcuts.length} shortcut hints`
+                    });
+                    
+                    // Check viewport meta
+                    const viewport = doc.querySelector('meta[name="viewport"]');
+                    checks.push({
+                        name: 'Has viewport meta tag',
+                        pass: viewport !== null
+                    });
+                    
+                    // Check lang attribute
+                    const html_element = doc.querySelector('html');
+                    checks.push({
+                        name: 'Has lang attribute on html',
+                        pass: html_element && html_element.hasAttribute('lang')
+                    });
+                    
+                    // Check for screen reader only element
+                    const srAnnouncer = doc.querySelector('#sr-announcer, .sr-only, [aria-live="polite"]');
+                    checks.push({
+                        name: 'Has screen reader announcer',
+                        pass: srAnnouncer !== null
+                    });
+                    
+                } catch (e) {
+                    checks.push({
+                        name: 'Could not load calculator HTML',
+                        pass: false,
+                        details: e.message
+                    });
+                }
+                
+                // Load CSS and check contrast
+                try {
+                    const response = await fetch('../styles.css');
+                    const css = await response.text();
+                    
+                    // Check for high contrast theme
+                    const hasHighContrast = css.includes('high-contrast') || css.includes('data-theme');
+                    checks.push({
+                        name: 'Has high contrast theme option',
+                        pass: hasHighContrast
+                    });
+                    
+                    // Check for focus-visible styles
+                    const hasFocusVisible = css.includes('focus-visible') || css.includes(':focus');
+                    checks.push({
+                        name: 'Has focus indicator styles',
+                        pass: hasFocusVisible
+                    });
+                    
+                    // Check for prefers-reduced-motion
+                    const hasReducedMotion = css.includes('prefers-reduced-motion');
+                    checks.push({
+                        name: 'Respects prefers-reduced-motion',
+                        pass: hasReducedMotion
+                    });
+                    
+                } catch (e) {
+                    checks.push({
+                        name: 'Could not load CSS',
+                        pass: false,
+                        details: e.message
+                    });
+                }
+                
+                // Render checks
+                for (const check of checks) {
+                    const el = document.createElement('div');
+                    el.className = `a11y-check ${check.pass ? 'pass' : 'fail'}`;
+                    el.innerHTML = `
+                        <span>${check.pass ? '✓' : '✗'}</span>
+                        <span>${check.name}</span>
+                        ${check.details ? `<span style="opacity:0.7;margin-left:auto">${check.details}</span>` : ''}
+                    `;
+                    container.appendChild(el);
+                }
+            }
+            
+            reset() {
+                this.results = { total: 0, passed: 0, failed: 0, skipped: 0 };
+                this.suites = [];
+                this.updateProgress();
+            }
+            
+            async runAll() {
+                this.reset();
+                this.totalTests = 100; // approximate
+                await this.runParserTests();
+                await this.runErrorHandlerTests();
+                await this.runAccessibilityTests();
+                this.renderResults();
+            }
+        }
+        
+        // Initialize
+        const runner = new TestRunner();
+        
+        // Event listeners
+        document.getElementById('runAll').onclick = () => runner.runAll();
+        document.getElementById('runParser').onclick = async () => {
+            runner.reset();
+            runner.totalTests = 80;
+            await runner.runParserTests();
+            runner.renderResults();
+        };
+        document.getElementById('runError').onclick = async () => {
+            runner.reset();
+            runner.totalTests = 15;
+            await runner.runErrorHandlerTests();
+            runner.renderResults();
+        };
+        document.getElementById('runA11y').onclick = () => runner.runAccessibilityTests();
+        
+        // Interactive evaluator
+        const parser = new ExpressionParser({ isDegreeMode: true });
+        document.getElementById('evalBtn').onclick = () => {
+            const input = document.getElementById('exprInput').value;
+            const resultEl = document.getElementById('exprResult');
+            
+            if (!input.trim()) {
+                resultEl.textContent = 'Enter an expression to evaluate';
+                resultEl.className = 'interactive-result';
+                return;
+            }
+            
+            const result = parser.evaluate(input);
+            if (result.success) {
+                resultEl.textContent = `= ${result.value}`;
+                resultEl.className = 'interactive-result success';
+            } else {
+                resultEl.textContent = `Error: ${result.error}`;
+                resultEl.className = 'interactive-result error';
+            }
+        };
+        
+        document.getElementById('exprInput').onkeypress = (e) => {
+            if (e.key === 'Enter') document.getElementById('evalBtn').click();
+        };
+        
+        // Auto-run tests on load
+        runner.runAll();
+    </script>
+</body>
+</html>
