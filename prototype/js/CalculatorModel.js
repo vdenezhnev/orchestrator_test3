@@ -8,6 +8,7 @@
  */
 
 import { ExpressionParser } from './ExpressionParser.js';
+import { ErrorHandler } from './ErrorHandler.js';
 
 class CalculatorModel {
     constructor() {
@@ -15,7 +16,9 @@ class CalculatorModel {
         this.history = [];
         this.maxHistoryLength = 50;
         this.expressionParser = new ExpressionParser({ isDegreeMode: true });
+        this.errorHandler = new ErrorHandler();
         this.expressionMode = false;
+        this.lastError = null;
     }
     
     /**
@@ -105,6 +108,19 @@ class CalculatorModel {
      * Input a digit
      */
     inputDigit(digit) {
+        this.clearLastError();
+        
+        const validation = this.errorHandler.validateInput('digit', this.getContext());
+        if (!validation.valid) {
+            this.lastError = validation.error;
+            return { 
+                success: false, 
+                error: this.errorHandler.formatError(validation.error),
+                errorCode: validation.error,
+                blocked: true
+            };
+        }
+        
         if (this.expressionMode) {
             this.expressionString += digit;
             this.currentValue = this.getLastNumber() || digit;
@@ -120,6 +136,13 @@ class CalculatorModel {
             } else if (this.currentValue !== '0' || digit !== '0') {
                 if (this.currentValue.replace(/[^0-9]/g, '').length < 15) {
                     this.currentValue += digit;
+                } else {
+                    return { 
+                        success: false, 
+                        error: this.errorHandler.formatError('MAX_DIGITS_REACHED'),
+                        errorCode: 'MAX_DIGITS_REACHED',
+                        blocked: true 
+                    };
                 }
             }
         }
@@ -127,15 +150,54 @@ class CalculatorModel {
     }
     
     /**
+     * Get current context for validation
+     */
+    getContext() {
+        return {
+            currentValue: this.currentValue,
+            previousValue: this.previousValue,
+            operator: this.operator,
+            waitingForOperand: this.waitingForOperand,
+            expressionMode: this.expressionMode,
+            expressionString: this.expressionString,
+            openParentheses: this.openParentheses
+        };
+    }
+    
+    /**
+     * Clear last error
+     */
+    clearLastError() {
+        this.lastError = null;
+    }
+    
+    /**
+     * Get last error details
+     */
+    getLastError() {
+        if (!this.lastError) return null;
+        return this.errorHandler.getErrorDetails(this.lastError);
+    }
+    
+    /**
      * Input decimal point
      */
     inputDecimal() {
+        this.clearLastError();
+        
         if (this.expressionMode) {
             const lastNum = this.getLastNumber();
-            if (!lastNum || !lastNum.includes('.')) {
-                this.expressionString += lastNum ? '.' : '0.';
-                this.currentValue = this.getLastNumber() || '0.';
+            if (lastNum && lastNum.includes('.')) {
+                this.lastError = 'TOO_MANY_DECIMALS';
+                return { 
+                    success: false, 
+                    error: this.errorHandler.formatError('TOO_MANY_DECIMALS'),
+                    errorCode: 'TOO_MANY_DECIMALS',
+                    blocked: true 
+                };
             }
+            this.expressionString += lastNum ? '.' : '0.';
+            this.currentValue = this.getLastNumber() || '0.';
             return { success: true, value: this.currentValue, expression: this.expressionString };
         }
         
@@ -144,6 +206,14 @@ class CalculatorModel {
             this.waitingForOperand = false;
         } else if (!this.currentValue.includes('.')) {
             this.currentValue += '.';
+        } else {
+            this.lastError = 'TOO_MANY_DECIMALS';
+            return { 
+                success: false, 
+                error: this.errorHandler.formatError('TOO_MANY_DECIMALS'),
+                errorCode: 'TOO_MANY_DECIMALS',
+                blocked: true 
+            };
         }
         return { success: true, value: this.currentValue };
     }
@@ -202,6 +272,8 @@ class CalculatorModel {
      * Calculate result
      */
     calculate() {
+        this.clearLastError();
+        
         if (this.expressionMode) {
             return this.evaluateExpression();
         }
@@ -213,6 +285,7 @@ class CalculatorModel {
         const prev = parseFloat(this.previousValue);
         const current = parseFloat(this.currentValue);
         let result;
+        let errorCode = null;
         
         switch (this.operator) {
             case '+':
@@ -226,30 +299,83 @@ class CalculatorModel {
                 break;
             case '÷':
                 if (current === 0) {
-                    return { success: false, error: 'Деление на ноль' };
+                    errorCode = 'DIVISION_BY_ZERO';
+                    this.lastError = errorCode;
+                    return { 
+                        success: false, 
+                        error: this.errorHandler.formatError(errorCode),
+                        errorCode: errorCode
+                    };
                 }
                 result = prev / current;
                 break;
+            case '%':
+                if (current === 0) {
+                    errorCode = 'MODULO_BY_ZERO';
+                    this.lastError = errorCode;
+                    return { 
+                        success: false, 
+                        error: this.errorHandler.formatError(errorCode),
+                        errorCode: errorCode
+                    };
+                }
+                result = prev % current;
+                break;
             case '^':
                 result = Math.pow(prev, current);
+                if (!isFinite(result)) {
+                    errorCode = 'OVERFLOW';
+                    this.lastError = errorCode;
+                    return { 
+                        success: false, 
+                        error: this.errorHandler.formatError(errorCode),
+                        errorCode: errorCode
+                    };
+                }
                 break;
             case 'nroot':
                 if (current === 0) {
-                    return { success: false, error: 'Корень степени 0' };
+                    errorCode = 'DIVISION_BY_ZERO';
+                    this.lastError = errorCode;
+                    return { 
+                        success: false, 
+                        error: 'Корень степени 0 не определён',
+                        errorCode: errorCode
+                    };
                 }
                 if (prev < 0 && current % 2 === 0) {
-                    return { success: false, error: 'Чётный корень отрицательного числа' };
+                    errorCode = 'SQRT_NEGATIVE';
+                    this.lastError = errorCode;
+                    return { 
+                        success: false, 
+                        error: 'Чётный корень отрицательного числа не определён',
+                        errorCode: errorCode
+                    };
                 }
                 result = prev < 0 ? -Math.pow(-prev, 1/current) : Math.pow(prev, 1/current);
                 break;
             default:
-                return { success: false, error: 'Неизвестный оператор' };
+                errorCode = 'INVALID_EXPRESSION';
+                this.lastError = errorCode;
+                return { 
+                    success: false, 
+                    error: this.errorHandler.formatError(errorCode),
+                    errorCode: errorCode
+                };
         }
         
-        if (!isFinite(result)) {
-            if (isNaN(result)) {
-                return { success: false, error: 'Результат не определён' };
-            }
+        const resultValidation = this.errorHandler.validateResult(result);
+        if (!resultValidation.valid) {
+            this.lastError = resultValidation.error;
+            return { 
+                success: false, 
+                error: this.errorHandler.formatError(resultValidation.error),
+                errorCode: resultValidation.error
+            };
+        }
+        
+        if (resultValidation.warning) {
+            result = resultValidation.value !== undefined ? resultValidation.value : result;
         }
         
         const expression = `${this.previousValue} ${this.operator} ${this.currentValue}`;
@@ -262,7 +388,12 @@ class CalculatorModel {
         this.previousValue = '';
         this.waitingForOperand = true;
         
-        return { success: true, value: formattedResult, expression: expression };
+        return { 
+            success: true, 
+            value: formattedResult, 
+            expression: expression,
+            warning: resultValidation.warning
+        };
     }
     
     /**
@@ -270,7 +401,25 @@ class CalculatorModel {
      */
     evaluateExpression() {
         if (!this.expressionString || this.expressionString.trim() === '') {
-            return { success: true, value: this.currentValue };
+            this.lastError = 'EMPTY_EXPRESSION';
+            return { 
+                success: false, 
+                error: this.errorHandler.formatError('EMPTY_EXPRESSION'),
+                errorCode: 'EMPTY_EXPRESSION'
+            };
+        }
+        
+        const syntaxValidation = this.errorHandler.validateExpression(this.expressionString);
+        if (!syntaxValidation.valid && syntaxValidation.errors.length > 0) {
+            const firstError = syntaxValidation.errors[0];
+            this.lastError = firstError.code;
+            return { 
+                success: false, 
+                error: this.errorHandler.formatError(firstError.code),
+                errorCode: firstError.code,
+                position: firstError.position,
+                errors: syntaxValidation.errors
+            };
         }
         
         this.expressionParser.setDegreeMode(this.isDegreeMode);
@@ -447,6 +596,8 @@ class CalculatorModel {
      * Input parenthesis
      */
     inputParenthesis(paren) {
+        this.clearLastError();
+        
         if (this.expressionMode) {
             if (paren === '(') {
                 const lastChar = this.expressionString.slice(-1);
@@ -456,19 +607,37 @@ class CalculatorModel {
                     this.expressionString += '(';
                 }
                 this.openParentheses++;
-            } else if (paren === ')' && this.openParentheses > 0) {
+            } else if (paren === ')') {
+                if (this.openParentheses <= 0) {
+                    this.lastError = 'UNBALANCED_PARENTHESES';
+                    return { 
+                        success: false, 
+                        error: this.errorHandler.formatError('UNBALANCED_PARENTHESES'),
+                        errorCode: 'UNBALANCED_PARENTHESES',
+                        blocked: true 
+                    };
+                }
                 this.expressionString += ')';
                 this.openParentheses--;
             }
-            return { success: true, expression: this.expressionString };
+            return { success: true, expression: this.expressionString, openParentheses: this.openParentheses };
         }
         
         if (paren === '(') {
             this.openParentheses++;
-        } else if (paren === ')' && this.openParentheses > 0) {
+        } else if (paren === ')') {
+            if (this.openParentheses <= 0) {
+                this.lastError = 'UNBALANCED_PARENTHESES';
+                return { 
+                    success: false, 
+                    error: this.errorHandler.formatError('UNBALANCED_PARENTHESES'),
+                    errorCode: 'UNBALANCED_PARENTHESES',
+                    blocked: true 
+                };
+            }
             this.openParentheses--;
         }
-        return { success: true };
+        return { success: true, openParentheses: this.openParentheses };
     }
     
     /**

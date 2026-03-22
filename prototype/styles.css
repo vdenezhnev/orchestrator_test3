@@ -394,9 +394,111 @@ body {
     color: var(--key-scientific-text);
 }
 
-/* Display error state */
+.indicator--paren {
+    background-color: var(--key-operator-bg);
+    color: var(--key-operator-text);
+    font-family: var(--font-mono);
+}
+
+/* ===== Error States ===== */
+
+/* Error state */
+.display--error {
+    border-color: #FF3B30 !important;
+}
+
 .display--error .display__result {
     color: #FF3B30;
+}
+
+.display--error .display__expression {
+    color: #FF3B30;
+    opacity: 0.8;
+}
+
+/* Warning state */
+.display--warning {
+    border-color: #FF9500 !important;
+}
+
+.display--warning .display__result {
+    color: #FF9500;
+}
+
+/* Blocked input state */
+.display--blocked {
+    animation: blocked-pulse 0.2s ease-out;
+}
+
+@keyframes blocked-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.01); border-color: #FF3B30; }
+    100% { transform: scale(1); }
+}
+
+.input-blocked .key {
+    pointer-events: none;
+}
+
+.input-blocked .key--digit,
+.input-blocked .key--function {
+    opacity: 0.6;
+}
+
+/* Expression error icon */
+.expression--error {
+    font-size: 1.25rem !important;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+}
+
+/* Error indicator badge */
+.display--error::before,
+.display--warning::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: error-pulse 1s ease-in-out infinite;
+}
+
+.display--error::before {
+    background-color: #FF3B30;
+}
+
+.display--warning::before {
+    background-color: #FF9500;
+}
+
+@keyframes error-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Dark theme error colors */
+[data-theme="dark"] .display--error .display__result {
+    color: #FF453A;
+}
+
+[data-theme="dark"] .display--warning .display__result {
+    color: #FF9F0A;
+}
+
+[data-theme="dark"] .display--error::before {
+    background-color: #FF453A;
+}
+
+/* High contrast error colors */
+[data-theme="high-contrast"] .display--error {
+    border-color: #FF0000 !important;
+    border-width: 2px;
+}
+
+[data-theme="high-contrast"] .display--error .display__result {
+    color: #FF0000;
 }
 
 /* ===== Mode Selector (Unit Toggle) ===== */
@@ -1184,6 +1286,17 @@ body {
 @keyframes pulse-function {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); background-color: var(--key-operator-bg); }
+    100% { transform: scale(1); }
+}
+
+/* Error flash for function keys */
+.key--scientific.error-flash {
+    animation: error-flash 0.3s ease-out;
+}
+
+@keyframes error-flash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color: #FF3B30; }
     100% { transform: scale(1); }
 }
 

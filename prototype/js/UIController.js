@@ -294,6 +294,19 @@ class UIController {
      */
     handleDigitInput(digit) {
         const result = this.model.inputDigit(digit);
+        
+        if (!result.success) {
+            if (result.blocked) {
+                this.view.showWarning(result.error, { 
+                    errorCode: result.errorCode,
+                    blocked: true,
+                    duration: 1000
+                });
+                this.announceForScreenReader(result.error);
+            }
+            return;
+        }
+        
         this.view.updateDisplay(this.model.getDisplayState());
         this.announceForScreenReader(digit);
     }
@@ -319,9 +332,18 @@ class UIController {
                     this.view.updateDisplay(this.model.getDisplayState());
                     this.view.clearOperatorHighlight();
                     this.view.updateHistory(this.model.getHistory());
-                    this.announceForScreenReader(`Результат: ${result.value}`);
+                    
+                    if (result.warning) {
+                        this.view.showWarning(result.value, { errorCode: result.warning });
+                        this.announceForScreenReader(`Результат: ${result.value} (предупреждение)`);
+                    } else {
+                        this.announceForScreenReader(`Результат: ${result.value}`);
+                    }
                 } else {
-                    this.view.showError(result.error);
+                    this.view.showError(result.error, { 
+                        errorCode: result.errorCode,
+                        severity: 'error'
+                    });
                     this.announceForScreenReader(`Ошибка: ${result.error}`);
                 }
             },
@@ -336,7 +358,15 @@ class UIController {
                 this.view.updateDisplay(this.model.getDisplayState());
             },
             'decimal': () => {
-                this.model.inputDecimal();
+                const result = this.model.inputDecimal();
+                if (!result.success && result.blocked) {
+                    this.view.showWarning(result.error, {
+                        errorCode: result.errorCode,
+                        blocked: true,
+                        duration: 1000
+                    });
+                    return;
+                }
                 this.view.updateDisplay(this.model.getDisplayState());
             },
             'negate': () => {
@@ -373,12 +403,28 @@ class UIController {
                 this.announceForScreenReader('Сохранено в память');
             },
             'lparen': () => {
-                this.model.inputParenthesis('(');
+                const result = this.model.inputParenthesis('(');
                 this.view.updateDisplay(this.model.getDisplayState());
+                if (result.openParentheses > 0) {
+                    this.view.showParenthesesIndicator(result.openParentheses);
+                }
             },
             'rparen': () => {
-                this.model.inputParenthesis(')');
+                const result = this.model.inputParenthesis(')');
+                if (!result.success && result.blocked) {
+                    this.view.showWarning(result.error, {
+                        errorCode: result.errorCode,
+                        blocked: true,
+                        duration: 1000
+                    });
+                    return;
+                }
                 this.view.updateDisplay(this.model.getDisplayState());
+                if (result.openParentheses > 0) {
+                    this.view.showParenthesesIndicator(result.openParentheses);
+                } else {
+                    this.view.hideParenthesesIndicator();
+                }
             },
         };
         
@@ -415,8 +461,17 @@ class UIController {
             
             this.announceForScreenReader(this.getFunctionResultAnnouncement(func, inputValue, result.value, angleMode));
         } else {
-            this.view.showError(result.error);
+            const errorDetails = this.model.getLastError();
+            this.view.showError(result.error, {
+                errorCode: result.errorCode || (errorDetails ? errorDetails.code : null),
+                severity: errorDetails ? errorDetails.severity : 'error'
+            });
             this.announceForScreenReader(`Ошибка: ${result.error}`);
+            
+            if (funcKey) {
+                funcKey.classList.add('error-flash');
+                setTimeout(() => funcKey.classList.remove('error-flash'), 300);
+            }
         }
     }
     

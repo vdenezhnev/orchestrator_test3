@@ -384,6 +384,7 @@ var Calculator = (function() {
         var prev = parseFloat(this.previousValue);
         var current = parseFloat(this.currentValue);
         var result;
+        var errorMessage = null;
         
         switch (this.operator) {
             case '+':
@@ -397,11 +398,37 @@ var Calculator = (function() {
                 break;
             case '÷':
                 if (current === 0) {
-                    this.showError('Деление на ноль');
+                    errorMessage = 'Невозможно разделить на ноль';
+                    this.showError(errorMessage);
+                    this.announceForScreenReader('Ошибка: ' + errorMessage);
                     return;
                 }
                 result = prev / current;
                 break;
+            case '%':
+                if (current === 0) {
+                    errorMessage = 'Остаток от деления на ноль не определён';
+                    this.showError(errorMessage);
+                    return;
+                }
+                result = prev % current;
+                break;
+            case '^':
+                result = Math.pow(prev, current);
+                break;
+        }
+        
+        if (!isFinite(result)) {
+            if (isNaN(result)) {
+                this.showError('Результат не определён');
+                return;
+            }
+            this.showError(result > 0 ? 'Результат: ∞' : 'Результат: -∞');
+            this.currentValue = result > 0 ? '∞' : '-∞';
+            this.operator = null;
+            this.previousValue = '';
+            this.waitingForOperand = true;
+            return;
         }
         
         var expression = this.previousValue + ' ' + this.operator + ' ' + this.currentValue;

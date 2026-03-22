@@ -288,10 +288,13 @@ class DisplayView {
     
     /**
      * Show error message
+     * @param {string} message - Error message to display
+     * @param {Object} options - Display options
      */
-    showError(message) {
+    showError(message, options = {}) {
         const display = this.elements.display;
         const result = this.elements.result;
+        const expression = this.elements.expression;
         
         if (!display || !result) return;
         
@@ -299,9 +302,27 @@ class DisplayView {
             clearTimeout(this.errorTimeout);
         }
         
-        display.classList.add('display--error');
+        const severity = options.severity || 'error';
+        const errorCode = options.errorCode;
+        const blocked = options.blocked;
+        const duration = options.duration || (severity === 'warning' ? 1500 : 2500);
+        
+        display.classList.remove('display--error', 'display--warning', 'display--blocked');
+        display.classList.add(`display--${severity}`);
+        
+        if (blocked) {
+            display.classList.add('display--blocked');
+            this.showBlockedFeedback();
+        }
+        
         result.textContent = message;
         result.setAttribute('role', 'alert');
+        result.setAttribute('aria-live', 'assertive');
+        
+        if (expression && errorCode) {
+            expression.textContent = this.getErrorIcon(errorCode);
+            expression.classList.add('expression--error');
+        }
         
         display.classList.add('shake');
         setTimeout(() => display.classList.remove('shake'), 300);
@@ -309,7 +330,80 @@ class DisplayView {
         this.errorTimeout = setTimeout(() => {
             this.clearErrorState();
             result.setAttribute('role', 'status');
-        }, 2000);
+            result.setAttribute('aria-live', 'polite');
+            if (expression) {
+                expression.classList.remove('expression--error');
+            }
+        }, duration);
+    }
+    
+    /**
+     * Show warning message (less severe than error)
+     */
+    showWarning(message, options = {}) {
+        this.showError(message, { ...options, severity: 'warning' });
+    }
+    
+    /**
+     * Show blocked input feedback
+     */
+    showBlockedFeedback() {
+        const calculator = this.elements.calculator;
+        if (!calculator) return;
+        
+        calculator.classList.add('input-blocked');
+        setTimeout(() => calculator.classList.remove('input-blocked'), 200);
+    }
+    
+    /**
+     * Get error icon for error code
+     */
+    getErrorIcon(errorCode) {
+        const icons = {
+            'DIVISION_BY_ZERO': '÷ 0',
+            'SQRT_NEGATIVE': '√ −',
+            'LOG_NON_POSITIVE': 'log ≤0',
+            'ASIN_OUT_OF_RANGE': 'asin ∉',
+            'ACOS_OUT_OF_RANGE': 'acos ∉',
+            'TAN_UNDEFINED': 'tan ∞',
+            'FACTORIAL_INVALID': 'n! ✗',
+            'FACTORIAL_OVERFLOW': 'n! ∞',
+            'OVERFLOW': '∞',
+            'UNBALANCED_PARENTHESES': '( ≠ )',
+            'TOO_MANY_DECIMALS': '. . .',
+            'MAX_DIGITS_REACHED': '15+',
+            'EMPTY_EXPRESSION': '∅',
+            'INVALID_EXPRESSION': '✗',
+        };
+        return icons[errorCode] || '!';
+    }
+    
+    /**
+     * Show parentheses count indicator
+     */
+    showParenthesesIndicator(count) {
+        let indicator = document.getElementById('parenIndicator');
+        
+        if (!indicator) {
+            indicator = document.createElement('span');
+            indicator.id = 'parenIndicator';
+            indicator.className = 'indicator indicator--paren';
+            this.elements.display.querySelector('.display__indicators')?.appendChild(indicator);
+        }
+        
+        indicator.textContent = '(' + count;
+        indicator.style.display = 'inline-flex';
+        indicator.setAttribute('aria-label', `${count} незакрытых скобок`);
+    }
+    
+    /**
+     * Hide parentheses indicator
+     */
+    hideParenthesesIndicator() {
+        const indicator = document.getElementById('parenIndicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
     }
     
     /**
