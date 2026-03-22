@@ -181,6 +181,11 @@
         </aside>
     </main>
 
-    <script src="script.js"></script>
+    <!-- Screen reader announcer -->
+    <div id="sr-announcer" role="status" aria-live="polite" aria-atomic="true" class="visually-hidden"></div>
+    
+    <!-- Load modular scripts or fallback to legacy -->
+    <script type="module" src="js/Calculator.js"></script>
+    <script nomodule src="script.js"></script>
 </body>
 </html>

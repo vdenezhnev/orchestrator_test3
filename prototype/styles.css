@@ -915,3 +915,172 @@ body {
         display: none;
     }
 }
+
+/* ===== Additional UI Controller Styles ===== */
+
+/* Key pressed state */
+.key.pressed {
+    transform: scale(0.92);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Key focused state (keyboard navigation) */
+.key.focused {
+    box-shadow: 0 0 0 3px var(--key-operator-bg);
+}
+
+/* Shake animation for errors */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.display.shake {
+    animation: shake 0.3s ease-in-out;
+}
+
+/* Feedback toast */
+.feedback-toast {
+    position: absolute;
+    bottom: var(--space-lg);
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background-color: var(--key-scientific-bg);
+    color: var(--key-scientific-text);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.feedback-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Ripple effect */
+.key {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Result value transition */
+.display__result {
+    transition: 
+        opacity 0.1s ease-out,
+        font-size 0.2s ease-out,
+        color 0.15s ease-out;
+}
+
+/* Expression fade in */
+.display__expression {
+    transition: opacity 0.15s ease-out;
+}
+
+/* Active operator glow effect */
+.key--operator.active {
+    box-shadow: 
+        var(--shadow-key),
+        0 0 12px rgba(255, 149, 0, 0.4);
+}
+
+[data-theme="dark"] .key--operator.active,
+[data-theme="high-contrast"] .key--operator.active {
+    box-shadow: 
+        var(--shadow-key),
+        0 0 16px rgba(255, 159, 10, 0.5);
+}
+
+/* Memory indicator pulse */
+.indicator--memory.active {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* History item hover effect */
+.history-panel__item {
+    transition: 
+        background-color var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-out);
+}
+
+.history-panel__item:hover {
+    transform: translateX(4px);
+}
+
+.history-panel__item:active {
+    transform: translateX(2px);
+}
+
+/* Long press indicator for backspace */
+.key[data-action="backspace"]::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background-color: var(--key-function-text);
+    border-radius: 1px;
+    transition: width 0.5s ease-out;
+}
+
+.key[data-action="backspace"]:active::after {
+    width: 60%;
+}
+
+/* Scientific panel slide animation on mobile */
+@media (max-width: 480px) {
+    .keypad--scientific {
+        max-height: 0;
+        overflow: hidden;
+        margin: 0;
+        opacity: 0;
+        transition: 
+            max-height 0.3s ease-out,
+            opacity 0.2s ease-out,
+            margin 0.3s ease-out;
+    }
+    
+    .calculator.show-scientific .keypad--scientific {
+        max-height: 200px;
+        opacity: 1;
+        margin-bottom: var(--space-md);
+    }
+}
+
+/* Smooth number change effect */
+.display__result.changing {
+    animation: number-change 0.15s ease-out;
+}
+
+@keyframes number-change {
+    0% { transform: translateY(-2px); opacity: 0.5; }
+    100% { transform: translateY(0); opacity: 1; }
+}
